@@ -1,5 +1,5 @@
-// if GDBC_INIT then return end
-// GDBC_INIT = true
+if GDBC_INIT then return end
+GDBC_INIT = true
 
 if not GDBC then
 	require("gdbc")
