@@ -7,7 +7,7 @@ end
 
 local DB =
 {
-	__schemas = _G.DB and _G.DB.__schemas or{}
+	__schemas = _G.DB and _G.DB.__schemas or {}
 }
 _G.DB = DB
 
@@ -52,14 +52,13 @@ function Query:onSuccess(result, last_insert)
 	local stop
 	if result then
 		for k, v in pairs(result) do
-			if type(v) == "table" then
+			if istable(v) then
 				for k2, v2 in pairs(v) do
 					if tonumber(v2) then
 						v[k2] = tonumber(v2)
 					end
 				end
-			end
-			if tonumber(v) then
+			elseif tonumber(v) then
 				result[k] = tonumber(v)
 			end
 		end
@@ -86,6 +85,54 @@ function Query:set(k, v)
 	self.sequence:set(k, v)
 end
 
+--[[
+local buffer = ""
+function SPrintTable(t, indent, done)
+
+	done = done or {}
+	indent = indent or 0
+	local keys = table.GetKeys(t)
+
+	table.sort(keys, function(a, b)
+		if (isnumber(a) && isnumber(b)) then return a < b end
+		return tostring(a) < tostring(b)
+	end)
+
+	for i = 1, #keys do
+		key = keys[ i ]
+		value = t[ key ]
+		buffer = buffer..(string.rep("\t", indent))
+
+		if  (istable(value) && !done[ value ]) then
+
+			done[ value ] = true
+			buffer = buffer..(tostring(key) .. ":" .. "\n")
+			SPrintTable (value, indent + 2, done)
+
+		else
+
+			buffer = buffer..(tostring(key) .. "\t=\t")
+			buffer = buffer..(tostring(value) .. "\n")
+
+		end
+
+	end
+	if indent == 0 then
+		local ret = buffer
+		buffer = ""
+		return ret
+	end
+end
+
+file.Write("query_log.txt", "")
+local function log(identifier, ...)
+	local args = {...}
+	local str = ("[%s] %s\n\n"):format(identifier, table.concat(args, ", "))
+	print(str)
+	file.Append("query_log.txt", str)
+end
+]]
+
 function Query:run(...)
 	if not self.sequence then
 		error("Query has invalid sqeuence?? Aborting.\n")
@@ -109,12 +156,20 @@ function Query:run(...)
 		error("Wrong function call on database object: "..funcName.."\n")
 	end
 
+	local id = os.time()
+
+--	log(id, "Executing Query: "..self.sql, unpack(self.formatargs))
+
 	func(self.sequence.database,
 		 self.sql,
 		 function(...)
+--		 	local args = {...}
+--		 	log(id, "Got Data:\n"..SPrintTable(args).."\n")
 			self:onSuccess(...)
 		 end,
 		 function(...)
+--		 	local args = {...}
+--		 	log(id, "FAILED:\n"..SPrintTable(args).."\n")
 		 	self:onFailure(...)
 		 end,
 		 unpack(self.formatargs)
