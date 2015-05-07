@@ -85,7 +85,7 @@ function Query:set(k, v)
 	self.sequence:set(k, v)
 end
 
---[[
+
 local buffer = ""
 function SPrintTable(t, indent, done)
 
@@ -131,7 +131,8 @@ local function log(identifier, ...)
 	print(str)
 	file.Append("query_log.txt", str)
 end
-]]
+
+GDBC_LOG = false
 
 function Query:run(...)
 	if not self.sequence then
@@ -158,18 +159,24 @@ function Query:run(...)
 
 	local id = os.time()
 
---	log(id, "Executing Query: "..self.sql, unpack(self.formatargs))
+	if GDBC_LOG then
+		log(id, "Executing Query: "..self.sql, unpack(self.formatargs))
+	end
 
 	func(self.sequence.database,
 		 self.sql,
 		 function(...)
---		 	local args = {...}
---		 	log(id, "Got Data:\n"..SPrintTable(args).."\n")
+		  	if GDBC_LOG then
+			  	local args = {...}
+		 		log(id, "Got Data:\n"..SPrintTable(args).."\n")
+		 	end
 			self:onSuccess(...)
 		 end,
 		 function(...)
---		 	local args = {...}
---		 	log(id, "FAILED:\n"..SPrintTable(args).."\n")
+		 	if GDBC_LOG then
+			 	local args = {...}
+		 		log(id, "FAILED:\n"..SPrintTable(args).."\n")
+		 	end
 		 	self:onFailure(...)
 		 end,
 		 unpack(self.formatargs)
@@ -427,8 +434,10 @@ local function schema(name)
 		for k, v in pairs(tbl) do
 			if type(v) == GDBC.Type then
 				_schema.database = v
-			else
+			elseif v then
 				_schema[v[1]] = v[2]
+			else
+				Error("GDBC: Could not connect to database!")
 			end
 		end
 		setmetatable(_schema, schema_mt)
