@@ -2,7 +2,7 @@ if GDBC_INIT then return end
 GDBC_INIT = true
 
 if not GDBC then
-	require("gdbc")
+    require("gdbc")
 end
 
 local DB =
@@ -447,7 +447,11 @@ end
 
 local function connect(info)
 	if !GDBC then return end
-	return GDBC.Connect(info)
+	local db, err = GDBC.Connect(info)
+	if not db and err then
+	    error("DB CONNECTION FAILED! " .. err)
+    end
+	return db
 end
 
 local function prepare(query, ...)
