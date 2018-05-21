@@ -428,14 +428,25 @@ local schema_mt =
 	end;
 }
 
+local migration_mt = {}
+
+local make_config_table, make_config_migration, perform_migrations
+local table_insert = table.insert
 local function schema(name)
 	return function(tbl)
-		local _schema = {}
+		table_insert(tbl, make_config_table())
+		table_insert(tbl, make_config_migration())
+
+		local _schema = {name=name, migrations={}}
 		for k, v in pairs(tbl) do
 			if type(v) == GDBC.Type then
 				_schema.database = v
 			elseif v then
-				_schema[v[1]] = v[2]
+				if getmetatable(v) == migration_mt then
+					_schema.migrations[v.id] = v.query
+				else
+					_schema[v[1]] = v[2]
+				end
 			else
 				Error("GDBC: Could not connect to database!")
 			end
@@ -539,22 +550,180 @@ local function table(name)
 	end
 end
 
+local function migration(id)
+	return function(sql)
+		return setmetatable({id=id, query=sql}, migration_mt)
+    end
+end
+
 hook.Add("Initialize", "InitSchemas", function()
 	local oSchema = _G.schema
 	local oTable = _G.table
 	local oConnect = _G.connect
+	local oMigration = _G.migration
 
 	_G.schema = schema
 	_G.table = table
 	_G.connect = connect
+	_G.migration = migration
 
 	hook.Run("GDBC:InitSchemas")
 
 	_G.schema = oSchema
 	_G.table = oTable
 	_G.connect = oConnect
+	_G.migration = oMigration
 
-	hook.Run("GDBC:Ready")
+	for k, v in pairs(DB.__schemas) do
+		perform_migrations(v)
+	end
+
+	hook.Add("Think", "GDBC:PollMigrations", function()
+		for k, v in pairs(DB.__schemas) do
+			if not v.MIGRATIONS_COMPLETED then return end
+		end		
+
+		hook.Remove("Think", "GDBC:PollMigrations")
+		hook.Remove("CheckPassword", "GDBC:WaitForMigrations")
+		hook.Run("GDBC:Ready")
+	end)
 end)
+
+if not CHECKPASSWORD_DB then
+	CHECKPASSWORD_DB = true
+	hook.Add("CheckPassword", "GDBC:WaitForMigrations", function()
+		return false, "Server is starting up. Try again in 30 seconds!"
+	end)
+end
+
+function make_config_table()
+	return
+    table "config"
+    {
+        getDatabaseVersion =
+        [[
+        	SELECT `configInt`
+            FROM `__T__`
+            WHERE
+                 `configName`='db_version'
+        ]];
+
+        updateDatabaseVersion = 
+        [[
+        	REPLACE INTO `__T__`
+            (configName, configInt)
+            VALUES('db_version', ?)
+        ]];
+
+        getString =
+        [[
+			SELECT `configStr`
+			FROM `__T__`
+			WHERE
+				`configName`=?
+	    ]];
+
+       	setString =
+       	[[
+       		REPLACE INTO `__T__`
+       		(configName, configStr)
+       		VALUES(?, ?)
+       	]];
+
+        getInt =
+        [[
+	        SELECT `configInt`
+			FROM `__T__`
+			WHERE
+				`configName`=?
+		]];
+
+       	setInt =
+       	[[
+       		REPLACE INTO `__T__`
+			(configName, configInt)
+			VALUES(?, ?)
+		]];
+
+    }
+end
+
+function make_config_migration()
+	return
+	migration (0)
+	[[
+		CREATE TABLE IF NOT EXISTS `config` (
+			`configName` VARCHAR(45) NOT NULL,
+			`configInt` INT NULL,
+			`configStr` VARCHAR(45) NULL,
+			PRIMARY KEY (`configName`))
+		ENGINE = InnoDB;
+
+	]]
+end
+
+function perform_migrations(db)
+	local on_migration_completed
+	local get_database_version
+	local check_migrations
+	local execute_migration
+
+	local function log(...)
+		print(db.name..": ", ...)
+	end
+
+	log("UpdateDBVersion", db.config.updateDatabaseVersion)
+
+	function on_migration_completed()
+	    log("Completed Migration")
+	    get_database_version(check_migrations)
+	end
+
+	function get_database_version(callback)
+	    db()
+	        :query (db.config.getDatabaseVersion)
+	            :result(function(self, row)
+	                db.DATABASE_VERSION = tonumber(row['configInt'])
+	                log("Got Database Version:", db.DATABASE_VERSION)
+	                if callback then callback() end
+	            end)
+
+	        :exec()
+	end
+
+	function check_migrations()
+	    if not db.DATABASE_VERSION then
+	        log("Checking For Migrations!")
+	        get_database_version(check_migrations)
+	        return
+	    end
+
+	    local nxt = db.DATABASE_VERSION+1
+	    if db.migrations[nxt] then
+	        log("Executing Migration", nxt)
+	        execute_migration(nxt)
+	    else
+	        log("Completed All Migrations!")
+	        db.MIGRATIONS_COMPLETED = true
+	    end
+	end
+
+	function execute_migration(id)
+	    log("Running Migration", id)
+	    db()
+	        :queryrawall (db.migrations[id])
+	            :success(function()
+	            	log("Migration query successful: ", id)
+	                return "updateDatabaseVersion", id
+	            end)
+	            
+	        :query "updateDatabaseVersion" (db.config.updateDatabaseVersion)
+		        :success(on_migration_completed)
+
+	        :exec()
+	end
+
+	execute_migration(0)
+end
 
 print("GDBC Wrapper loaded")
