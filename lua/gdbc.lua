@@ -687,6 +687,10 @@ function perform_migrations(db)
 	                log("Got Database Version:", db.DATABASE_VERSION)
 	                if callback then callback() end
 	            end)
+	            :fail(function(self, row)
+	            	execute_migration(0)
+            	end)
+
 
 	        :exec()
 	end
@@ -723,7 +727,7 @@ function perform_migrations(db)
 	        :exec()
 	end
 
-	execute_migration(0)
+	check_migrations(0)
 end
 
 print("GDBC Wrapper loaded")
