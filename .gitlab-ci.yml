@@ -1,0 +1,8 @@
+publish_npm:
+  stage: deploy
+  script:
+    - npm-scp-publish
+  only:
+    - master
+  tags:
+    - npm
