@@ -1,8 +1,17 @@
 if GDBC_INIT then return end
 GDBC_INIT = true
 
-if not GDBC then
-    require("gdbc")
+local MySQLOO_MetaID = 45
+local MySQLOO_MetaName = "MySQLOO table"
+
+local function IsMySQLOODB(tbl)
+	local mt = istable(tbl) and getmetatable(tbl) or {}
+	return mt and istable(mt) and mt.MetaID == MySQLOO_MetaID
+		   and mt.MetaName == MySQLOO_MetaName
+end
+
+if not mysqloo then
+    require("mysqloo")
 end
 
 local DB =
@@ -29,6 +38,58 @@ local DB_mt =
 }
 
 if not getmetatable(DB) then setmetatable(DB, DB_mt) end
+
+local buffer = ""
+function SPrintTable(t, indent, done)
+
+	done = done or {}
+	indent = indent or 0
+	local keys = table.GetKeys(t)
+
+	table.sort(keys, function(a, b)
+		if (isnumber(a) && isnumber(b)) then return a < b end
+		return tostring(a) < tostring(b)
+	end)
+
+	for i = 1, #keys do
+		key = keys[ i ]
+		value = t[ key ]
+		buffer = buffer..(string.rep("\t", indent))
+
+		if  (istable(value) && !done[ value ]) then
+
+			done[ value ] = true
+			buffer = buffer..(tostring(key) .. ":" .. "\n")
+			SPrintTable (value, indent + 2, done)
+
+		else
+
+			buffer = buffer..(tostring(key) .. "\t=\t")
+			buffer = buffer..(tostring(value) .. "\n")
+
+		end
+
+	end
+	if indent == 0 then
+		local ret = buffer
+		buffer = ""
+		return ret
+	end
+end
+
+file.Write("query_log.txt", "")
+local concat = table.concat
+local function log(identifier, ...)
+	local args = {...}
+
+	local str = ("[%s] %s\n\n"):format(identifier, concat(args, ", "))
+	
+	print(str)
+	file.Append("query_log.txt", str)
+end
+
+GDBC_LOG = false
+local traceback = ""
 
 local Query =
 {
@@ -85,59 +146,10 @@ function Query:set(k, v)
 	self.sequence:set(k, v)
 end
 
-
-local buffer = ""
-function SPrintTable(t, indent, done)
-
-	done = done or {}
-	indent = indent or 0
-	local keys = table.GetKeys(t)
-
-	table.sort(keys, function(a, b)
-		if (isnumber(a) && isnumber(b)) then return a < b end
-		return tostring(a) < tostring(b)
-	end)
-
-	for i = 1, #keys do
-		key = keys[ i ]
-		value = t[ key ]
-		buffer = buffer..(string.rep("\t", indent))
-
-		if  (istable(value) && !done[ value ]) then
-
-			done[ value ] = true
-			buffer = buffer..(tostring(key) .. ":" .. "\n")
-			SPrintTable (value, indent + 2, done)
-
-		else
-
-			buffer = buffer..(tostring(key) .. "\t=\t")
-			buffer = buffer..(tostring(value) .. "\n")
-
-		end
-
-	end
-	if indent == 0 then
-		local ret = buffer
-		buffer = ""
-		return ret
-	end
-end
-
-file.Write("query_log.txt", "")
-local function log(identifier, ...)
-	local args = {...}
-	local str = ("[%s] %s\n\n"):format(identifier, table.concat(args, ", "))
-	print(str)
-	file.Append("query_log.txt", str)
-end
-
-GDBC_LOG = false
-
 function Query:run(...)
 	if not self.sequence then
 		error("Query has invalid sqeuence?? Aborting.\n")
-	elseif type(self.sequence.database) ~= GDBC.Type then
+	elseif !IsMySQLOODB(self.sequence.database) then
 		error("Sequence has invalid database?? Aborting.\n")
 	end
 
@@ -150,37 +162,57 @@ function Query:run(...)
 		error("Wrong query type. Expected 'function' or 'string' but got "..type(self.query).."\n")
 	end
 
-	local funcName = ("Query%s%s"):format(self.all and "Set" or "", self.format and "Ex" or "")
-	local func = self.sequence.database[funcName]
-
-	if !func then
-		error("Wrong function call on database object: "..funcName.."\n")
-	end
-
 	local id = os.time()
 
+
+	-- TODO: Switch to proper prepared statements :D
+	local sql = ""
+	local l = #self.sql
+	for i=1, l do
+		local c = self.sql[i]
+		if c == '?' then
+			local s = table.remove(self.formatargs, 1)
+			if isstring(s) then
+				s = self.sequence.database:escape(s)
+			end
+
+			sql = sql .. "'" .. s .. "'"
+		else
+			sql = sql .. c
+		end
+	end
 	if GDBC_LOG then
-		log(id, "Executing Query: "..self.sql, unpack(self.formatargs))
+		log(id, "Executing Query: "..sql)
+		traceback = debug.traceback()
 	end
 
-	func(self.sequence.database,
-		 self.sql,
-		 function(...)
-		  	if GDBC_LOG then
-			  	local args = {...}
-		 		log(id, "Got Data:\n"..SPrintTable(args).."\n")
-		 	end
-			self:onSuccess(...)
-		 end,
-		 function(...)
-		 	if GDBC_LOG then
-			 	local args = {...}
-		 		log(id, "FAILED:\n"..SPrintTable(args).."\n")
-		 	end
-		 	self:onFailure(...)
-		 end,
-		 unpack(self.formatargs)
-		)
+	local query = self.sequence.database:query(sql)
+
+	function query.onAborted(q)
+	end
+
+	function query.onError(q, err, sql)
+	 	local args = {err, sql}
+ 		log(id, "FAILED:\n"..SPrintTable(args).."\n")
+ 		self:onFailure(err, sql, traceback)
+	end
+
+	function query.onSuccess(q, data)
+		if not self.all then
+			if #data == 0 then
+				data = falsen
+			else
+				data = data[1]
+			end
+		end
+
+	 	self:onSuccess(data, q:lastInsert())
+	end
+
+	function query.onData(q, data)
+	end
+
+	query:start()
 end
 
 
@@ -439,7 +471,7 @@ local function schema(name)
 
 		local _schema = {name=name, migrations={}}
 		for k, v in pairs(tbl) do
-			if type(v) == GDBC.Type then
+			if IsMySQLOODB(v) then
 				_schema.database = v
 			elseif v then
 				if getmetatable(v) == migration_mt then
@@ -456,12 +488,14 @@ local function schema(name)
 	end
 end
 
-local function connect(info)
-	if !GDBC then return end
-	local db, err = GDBC.Connect(info)
+local function connect(i)
+	if !mysqloo then return end
+	local db = mysqloo.connect(i.host, i.user, i.pass, i.database, i.port)
 	if not db and err then
 	    error("DB CONNECTION FAILED! " .. err)
     end
+    db:connect()
+
 	return db
 end
 
