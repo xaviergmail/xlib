@@ -507,7 +507,7 @@ local function prepare(query, ...)
 	end
 
 	if #format ~= count then
-		error(string.format("DB: Prepared statement called with improper argument count: expected %d but got %d instead.\n", count, #format))
+		error(string.format("DB: Prepared statement called with improper argument count: expected %d but got %d instead.\n %s", count, #format, debug.traceback()))
 	end
 
 	return query, unpack(format)
