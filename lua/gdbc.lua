@@ -491,9 +491,16 @@ end
 local function connect(i)
 	if !mysqloo then return end
 	local db = mysqloo.connect(i.host, i.user, i.pass, i.database, i.port)
-	if not db and err then
-	    error("DB CONNECTION FAILED! " .. err)
-    end
+
+
+	function db:onConnected(err)
+		print(i.database..": Connected!")
+	end
+
+	function db:onConnectionFailed(err)
+		Error(i.database..": Database connection failed with username ".. i.user)
+	end
+
     db:connect()
 
 	return db
@@ -623,7 +630,7 @@ hook.Add("Initialize", "InitSchemas", function()
 	end)
 end)
 
-if not CHECKPASSWORD_DB then
+if not CheckPassword_DB then
 	CHECKPASSWORD_DB = true
 	hook.Add("CheckPassword", "GDBC:WaitForMigrations", function()
 		return false, "Server is starting up. Try again in 30 seconds!"
