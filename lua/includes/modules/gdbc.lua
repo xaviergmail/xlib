@@ -1,6 +1,3 @@
-if GDBC_INIT then return end
-GDBC_INIT = true
-
 local MySQLOO_MetaID = 45
 local MySQLOO_MetaName = "MySQLOO table"
 
@@ -164,8 +161,7 @@ function Query:run(...)
 
 	local id = os.time()
 
-
-	-- TODO: Switch to proper prepared statements :D
+	-- TODO: Switch to **actual** prepared statements
 	local sql = ""
 	local l = #self.sql
 	for i=1, l do
