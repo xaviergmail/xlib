@@ -1,10 +1,9 @@
 {
-  "name": "@private/gdbc",
+  "name": "@private/xlib",
   "version": "1.0.0",
   "description": "",
 
   "author": "Xavier Bergeron",
-  "license": "ISC"
 }
 
 
