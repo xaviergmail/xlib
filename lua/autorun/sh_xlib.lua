@@ -36,9 +36,11 @@ function SPrintTable(t, indent, done)
 	end
 end
 
-require "credentialstore"
+if SERVER then
+	require "credentialstore"
+end
 
-if not CREDENTIALS.extended then return end
+if not GetGlobalBool("xlib_extended") then return end
 
 local function luacmd(ply, cmd, args, argstr)
 	local env = {}

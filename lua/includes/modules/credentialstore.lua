@@ -1,3 +1,5 @@
+if CLIENT then return end
+
 local credential_store = "CREDENTIAL_STORE.txt"
 
 local function fmterr(str)
@@ -20,7 +22,7 @@ local defaults = {
 
 local mt = {
 	__index = function(t, k)
-		if defaults[k] then
+		if defaults[k] ~= nil then
 			return defaults[k]
 		end
 		error(fmterr("Tried to read credentials for "..(tostring(k))
