@@ -10,65 +10,42 @@ local function log(...)
 	MsgC(green, s .. "\n")
 end
 
-local t = {}
-local function reset()
-	t.cl = {}
-	t.sh = {}
-	t.sv = {}
-end
-
-local function doFile(dir, f)
+local function doFile(dir, f, _include)
 	local realm = f:sub(1, 3)
 
 	f = dir..'/'..f
 
 	if realm == "sh_" then
-		table.insert(t.sh, f)
-	elseif realm == "sv_" then
-		table.insert(t.sv, f)
+		AddCSLuaFile(f)
+		_include(f)
+	elseif SERVER and realm == "sv_" then
+		_include(f)
 	elseif realm == "cl_" then
-		table.insert(t.cl, f)
+		AddCSLuaFile(f)
+		if CLIENT then
+			_include(f)
+		end
 	end
 end
 
-local function iterDir(dir)
+local function iterDir(dir, _include)
 	local files, dirs = file.Find(dir..'/*', 'LUA')
 	log("Checking", dir)
 
 	for _, f in ipairs(files) do
 		if f:match(".*%.lua$") then
-			doFile(dir, f)
+			doFile(dir, f, _include)
 		end
 	end
 
 	for _, d in ipairs(dirs) do
-		iterDir(dir..'/'..d)
+		iterDir(dir..'/'..d, _include)
 	end
 end
 
 function xloader(dir, _include)
 	log("Loading directory", dir)
-	reset()
-	iterDir(dir)
-
-	for k, v in ipairs(t.sh) do
-		AddCSLuaFile(v)
-		_include(v)
-	end
-
-	if SERVER then
-		for k, v in ipairs(t.sv) do
-			_include(v)
-		end
-	end
-
-	for k, v in ipairs(t.cl) do
-		if CLIENT then
-			_include(v)
-		else
-			AddCSLuaFile(v)
-		end
-	end
+	iterDir(dir, _include)
 end
 
 xloader("xlib", include)
