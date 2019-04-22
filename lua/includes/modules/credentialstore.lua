@@ -25,7 +25,7 @@ local mt = {
 		if defaults[k] ~= nil then
 			return defaults[k]
 		end
-		error(fmterr("Tried to read credentials for "..(tostring(k))
+		ErrorNoHalt(fmterr("Tried to read credentials for "..(tostring(k))
 			         .." but it was not set in the "..credential_store.." file!"))
 	end
 }
