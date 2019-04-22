@@ -69,7 +69,11 @@ local function luacmd(ply, cmd, args, argstr)
 		env.print(SPrintTable(tbl))
 	end
 
-	setmetatable(env, {__index = _G, __newindex = _G})
+	-- For some reason __index = _G doesn't work here.
+	setmetatable(env, {
+		__index = function(t, k) return rawget(_G, k) end,
+		__newindex = function(t, k, v) rawset(_G, k, v) end,
+	})
 
 	local fn, err = CompileString(argstr, ply:SteamID()..".lua", false)
 	if not isfunction(fn) then
