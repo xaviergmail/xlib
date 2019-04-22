@@ -68,3 +68,5 @@ function xloader(dir, _include)
 		end
 	end
 end
+
+xloader("xlib", include)
