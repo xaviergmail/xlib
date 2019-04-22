@@ -32,11 +32,13 @@ local function doFile(dir, f)
 end
 
 local function iterDir(dir)
-	local files, dirs = file.Find(dir..'/*.lua', 'LUA')
+	local files, dirs = file.Find(dir..'/*', 'LUA')
 	log("Checking", dir)
 
 	for _, f in ipairs(files) do
-		doFile(dir, f)
+		if f:match(".*%.lua$") then
+			doFile(dir, f)
+		end
 	end
 
 	for _, d in ipairs(dirs) do
