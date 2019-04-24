@@ -22,6 +22,7 @@ AddCSLuaFile()
 
 netwrapper          = netwrapper          or {}
 netwrapper.ents     = netwrapper.ents     or {}
+netwrapper.clients  = netwrapper.clients  or {}
 netwrapper.requests = netwrapper.requests or {}
 netwrapper.hooks    = netwrapper.hooks 	  or {}
 
@@ -30,6 +31,7 @@ netwrapper.hooks    = netwrapper.hooks 	  or {}
 --------------------------------------------------------------------------]]--
 
 local ENTITY = FindMetaTable( "Entity" )
+local PLAYER = FindMetaTable( "Player" )
 
 -- This is the amount of time (in seconds) to wait before a client will send
 -- another request to the server, asking for an non-networked key on an entity.
@@ -211,6 +213,103 @@ function netwrapper.NetVarChanged( id, key, value, realid )
 			end
 		end
 	end
+end
+
+--[[--------------------------------------------------------------------------
+--	CLIENT VARS
+--  Functionally identical to NetVars, but for players only, with the 
+--	 difference being that ClientVars are only networked to their respective
+--   client instead of everyone.
+--  Example usage would be to network a player's health, money, inventory, etc.
+--------------------------------------------------------------------------]]--
+
+--[[--------------------------------------------------------------------------
+--
+--	PLAYER:SetClientVar( string, *, boolean [optional] )
+--
+--	Equivalent to ENTITY:SetNetVar( ... ), but the variable is ONLY networked
+--   to the repsective client rather than everyone.
+--]]--
+function PLAYER:SetClientVar( key, value, force )
+
+	if ( netwrapper.GetClientVars( self:EntIndex() )[ key ] == value and not force ) then return end
+
+	netwrapper.StoreClientVar( self:EntIndex(), key, value )
+
+	if ( SERVER ) then 
+		netwrapper.SendNetVar( self, self:EntIndex(), key, value, true )
+	end
+end
+
+--[[--------------------------------------------------------------------------
+--
+--	PLAYER:GetClientVar( string, * )
+
+--	Equivalent to ENTITY:GetNetVar( ... ), but the variable is ONLY networked
+--   to the repsective client rather than everyone.
+--
+--	Returns:
+--	    the value of the associated key from the player's client-specific variables,
+--	 OR the default value if this key hasn't been set and the default value was provided,
+--	 OR nil if no default was provided and this key hasn't been set.
+--]]--
+function PLAYER:GetClientVar( key, default )
+	local values = netwrapper.GetClientVars( self:EntIndex() )
+	if ( values[ key ] ~= nil ) then return values[ key ] else return default end
+end
+
+-- In order to lower the required complexity of adding similar hook functionality
+-- to ClientVars, we will use the same hook table data, but add a prefix to the hook
+-- identifiers to prevent clash between AddNetHook("Money") and AddCLNetHook("Money")
+netwrapper.CLNetHookPrefix = "ClientVar_"
+
+--[[--------------------------------------------------------------------------
+--
+--	PLAYER:AddCLNetHook( string, string, function )
+--
+--	Adds a Net Hook that is to be called when the player's ClientVar[key] changes
+--  Uniquely identified by name to be later removed by ENTITY:RemoveCLNetHook
+--]]--
+function PLAYER:AddCLNetHook( key, name, fn )
+	netwrapper.StoreNetHook( self:EntIndex(), netwrapper.CLNetHookPrefix .. key, name, fn )
+end
+
+--[[--------------------------------------------------------------------------
+--
+--	PLAYER:RemoveCLNetHook( string, string )
+--
+--	Removes the Net Hook on this entity referred to by ClientVar key and hook Name
+--]]--
+function PLAYER:RemoveCLNetHook( key, name )
+	netwrapper.StoreNetHook( self:EntIndex(), netwrapper.CLNetHookPrefix .. key, name, nil )
+end
+
+
+--[[--------------------------------------------------------------------------
+--
+--	netwrapper.StoreClientVar( int, string, * )
+--
+--	Stores the key/value pair of the player into a table so that we can
+--	 retrieve them with PLAYER:GetClientVar( key ), and to network the data
+--	 to the respective client only
+--]]--
+function netwrapper.StoreClientVar( id, key, value )
+	netwrapper.clients[ id ] = netwrapper.clients[ id ] or {}
+	netwrapper.clients[ id ][ key ] = value
+
+	netwrapper.NetVarChanged( id, netwrapper.CLNetHookPrefix .. key, value )
+	netwrapper.NetVarChanged( -1, netwrapper.CLNetHookPrefix .. key, value, id )  -- Hack: use entity ID -1 as an all-inclusive hook
+end
+
+--[[--------------------------------------------------------------------------
+--
+--	netwrapper.GetClientVars( id )
+--
+--	Retrieves any client-specific networked data on the given entity index, 
+--   or an empty table if nothing has been networked on the player yet.
+--]]--
+function netwrapper.GetClientVars( id )
+	return netwrapper.clients[ id ] or {}
 end
 
 --[[--------------------------------------------------------------------------

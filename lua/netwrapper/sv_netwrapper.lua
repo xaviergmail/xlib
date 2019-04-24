@@ -65,7 +65,7 @@ end )
 --	netwrapper.SyncClient( player )
 --
 --	Loops through every entity currently networked and sends the networked
---	 data to the client.
+--	 data to the client. This will also network any persistent ClientVars.
 --
 --	While looping, any values that are NULL (disconnected players, removed entities) 
 --	 will automatically be removed from the table and not synced to the client.
@@ -81,6 +81,15 @@ function netwrapper.SyncClient( ply )
 			netwrapper.SendNetVar( ply, id, key, value )
 		end			
 	end
+
+	for key, value in pairs( netwrapper.GetClientVars( ply:EntIndex() ) ) do
+		if ( IsEntity( value ) and !value:IsValid() ) then 
+			netwrapper.clients[ ply:EntIndex() ][ key ] = nil 
+			continue; 
+		end
+		
+		netwrapper.SendNetVar( ply, ply:EntIndex(), key, value, true )
+	end	
 end
 
 --[[--------------------------------------------------------------------------
@@ -95,21 +104,23 @@ function netwrapper.BroadcastNetVar( id, key, value )
 		net.WriteUInt( id, 16 )
 		net.WriteString( key )
 		net.WriteType( value )
+		net.WriteBool( false )
 	net.Broadcast()
 end
 
 --[[--------------------------------------------------------------------------
 --
---	netwrapper.SendNetVar( player, int, string, * )
+--	netwrapper.SendNetVar( player, int, string, *, boolean )
 --
 --	Sends a net message to the specified client containing the
 --	 key/value pair to assign on the associated entity.
 --]]--
-function netwrapper.SendNetVar( ply, id, key, value )
+function netwrapper.SendNetVar( ply, id, key, value, clientvar )
 	net.Start( "NetWrapperVar" )
 		net.WriteUInt( id, 16 )
 		net.WriteString( key )
 		net.WriteType( value )
+		net.WriteBool( clientvar )
 	net.Send( ply )
 end
 
@@ -233,6 +244,7 @@ hook.Add( "EntityRemoved", "NetWrapperClear", function( ent )
 		netwrapper.plypersistence[ ent:SteamID() ] = {
 			netwrapper.FilterPersistentVars( netwrapper.ents[ ent:EntIndex() ] ),
 			netwrapper.FilterPersistentVars( netwrapper.requests[ ent:EntIndex() ] ),
+			netwrapper.FilterPersistentVars( netwrapper.clients[ ent:EntIndex() ] ),
 		}
 	end
 
@@ -253,7 +265,8 @@ hook.Add( "OnEntityCreated", "NetWrapperRestore", function ( ent )
 	local stored = netwrapper.plypersistence[ ent:SteamID() ]
 
 	if ( stored ) then
-		netwrapper.ents[ ent:EntIndex() ] = stored[ 1 ]
+		netwrapper.ents[ ent:EntIndex() ]     = stored[ 1 ]
 		netwrapper.requests[ ent:EntIndex() ] = stored[ 2 ]
+		netwrapper.clients[ ent:EntIndex() ]  = stored[ 3 ]
 	end
 end )

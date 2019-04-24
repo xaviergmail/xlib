@@ -56,8 +56,13 @@ net.Receive( "NetWrapperVar", function( len )
 	local key    = net.ReadString()
 	local typeid = net.ReadUInt( 8 )      -- read the prepended type ID that was written automatically by net.WriteType(*)
 	local value  = net.ReadType( typeid ) -- read the data using the corresponding type ID
+	local client = net.ReadBool() -- whether this variable is client-specific
 
-	netwrapper.StoreNetVar( entid, key, value )
+	if client then
+		netwrapper.StoreClientVar( entid, key, value )
+	else
+		netwrapper.StoreNetVar( entid, key, value )
+	end
 end )
 
 --[[--------------------------------------------------------------------------
@@ -82,13 +87,13 @@ end )
 --]]--
 hook.Add( "OnEntityCreated", "NetWrapperSync", function( ent )
 	local id = ent:EntIndex()
-	local values = netwrapper.GetNetVars( id )
 	
-	for key, value in pairs( values ) do
+	for key, value in pairs( netwrapper.GetNetVars( id ) ) do
 		ent:SetNetVar( key, value )
+	end
 
-		netwrapper.NetVarChanged( id, key, value )
-		netwrapper.NetVarChanged( -1, key, value, id )  -- Hack: use entity ID -1 as an all-inclusive hook
+	for key, value in pairs( netwrapper.GetClientVars( id ) ) do
+		ent:SetClientVar( key, value )
 	end
 end )
 
@@ -189,3 +194,48 @@ net.Receive( "NetWrapperClear", function( bits )
 	local id = net.ReadUInt( 16 )
 	netwrapper.ClearData( id )
 end )
+
+
+--[[--------------------------------------------------------------------------
+--	CLIENT VARS WRAPPER
+--------------------------------------------------------------------------]]--
+
+--[[--------------------------------------------------------------------------
+--
+--	netwrapper.SetClientVar( string, *, boolean [optional] )
+--
+--	Functionally identical to LocalPlayer():SetClientVar( ... )
+--]]--
+function netwrapper.SetClientVar( key, value, force )
+	LocalPlayer():SetClientVar( key, value, force )
+end
+
+--[[--------------------------------------------------------------------------
+--
+--	netwrapper.GetClientVar( string, * )
+--
+--	Functionally identical to LocalPlayer():GetClientVar( ... )
+--]]--
+function netwrapper.GetClientVar( key, default )
+	return LocalPlayer():GetClientVar( key, default )
+end
+
+--[[--------------------------------------------------------------------------
+--
+--	netwrapper.AddCLNetHook( string, string, function )
+--
+--	Functionally identical to LocalPlayer():AddCLNetHook( ... )
+--]]--
+function netwrapper.AddCLNetHook( key, name, fn )
+	LocalPlayer():AddCLNetHook( key, name, fn )
+end
+
+--[[--------------------------------------------------------------------------
+--
+--	netwrapper.RemoveCLNetHook( string, string )
+--
+--	Functionally identical to LocalPlayer():RemoveCLNetHook( ... )
+--]]--
+function netwrapper.RemoveCLNetHook( key, name )
+	LocalPlayer():RemoveCLNetHook( key, name )
+end
