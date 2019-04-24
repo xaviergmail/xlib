@@ -18,9 +18,11 @@
 -- 	Namespace Tables
 --------------------------------------------------------------------------]]--
 
-netwrapper          = netwrapper          or {}
-netwrapper.ents     = netwrapper.ents     or {}
-netwrapper.requests = netwrapper.requests or {}
+netwrapper                 = netwrapper                 or {}
+netwrapper.ents            = netwrapper.ents            or {}
+netwrapper.requests        = netwrapper.requests        or {}
+netwrapper.persistentvars  = netwrapper.persistentvars  or {}
+netwrapper.plypersistence  = netwrapper.plypersistence  or {}
 
 --[[--------------------------------------------------------------------------
 -- 	Localized Functions & Variables
@@ -163,6 +165,53 @@ function netwrapper.SendNetRequest( ply, id, key, value )
 	net.Send( ply )
 end
 
+
+--[[--------------------------------------------------------------------------
+--
+--	netwrapper.DefinePersistentVar( string )
+--
+--	Marks a specific NetVar / NetRequest key to be saved upon a player disconnecting to be restored
+--   in the future upon reconnection.
+--
+--  NOTE: This persistence is only for the current game session and should only be used
+--   for VOLATILE data. An example use would be to store a player's score for the current
+--   round. NetWrapper will handle restoring this data for you if a player reconnects.
+--  
+--  ** Any level change or server restart will wipe this stored data. **
+--]]--
+function netwrapper.DefinePersistentVar( key )
+	netwrapper.persistentvars[ key ] = true
+end
+
+--[[--------------------------------------------------------------------------
+--
+--	netwrapper.UndefinePersistentVar( string )
+--
+--	Removes a specific NetVar / NetRequest key from the player disconnection persistence list
+--]]--
+function netwrapper.UndefinePersistentVar( key )
+	netwrapper.persistentvars[ key ] = true
+end
+
+--[[--------------------------------------------------------------------------
+--
+--	netwrapper.FilterPersistentVars( table )
+--
+--	Modifies the input table to remove any keyvalue pairs whose key does not
+--   appear in the variable persistence list
+--
+--  Returns: The modified input table
+--]]--
+function netwrapper.FilterPersistentVars( tbl )
+	for k, v in pairs( tbl or {} ) do
+		if not netwrapper.persistentvars[ k ] then
+			tbl[ k ] = nil
+		end
+	end
+
+	return tbl
+end
+
 --[[--------------------------------------------------------------------------
 -- 
 -- 	Hook - EntityRemoved( entity )
@@ -171,7 +220,39 @@ end
 -- 	 data at the entity's index if any was being networked. This will prevent
 -- 	 data corruption where a future entity may be using the data from a previous
 --	 entity that used the same EntIndex
+--
+--  If the entity being removed is a player (upon disconnecting), the player's
+--   NetVars / NetRequests that have been marked for persistence using 
+--   netwrapper.DefinePersistentVar will be stored (saved by Steam ID) 
+--   for re-assignment in case the player reconnects.
 --]]--
 hook.Add( "EntityRemoved", "NetWrapperClear", function( ent )
+
+	if ( ent:IsPlayer() ) then
+		netwrapper.plypersistence[ ent:SteamID() ] = {
+			netwrapper.FilterPersistentVars( netwrapper.ents[ ent:EntIndex() ] ),
+			netwrapper.FilterPersistentVars( netwrapper.requests[ ent:EntIndex() ] ),
+		}
+	end
+
 	netwrapper.ClearData( ent:EntIndex() )
+end )
+
+--[[--------------------------------------------------------------------------
+-- 
+-- 	Hook - EntityRemoved( entity )
+-- 
+-- 	Called when an entity has been created. This will automatically restore any
+--   NetVars / NetRequests on players whose keys were saved by 
+--   netwrapper.DefinePersistentVar when the player disconnected.
+--]]--
+hook.Add( "OnEntityCreated", "NetWrapperRestore", function ( ent )
+	if ( not ent:IsPlayer() ) then return end
+
+	local stored = netwrapper.plypersistence[ ent:SteamID() ]
+
+	if ( stored ) then
+		netwrapper.ents[ ent:EntIndex() ] = stored[ 1 ]
+		netwrapper.requests[ ent:EntIndex() ] = stored[ 2 ]
+	end
 end )
