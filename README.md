@@ -11,7 +11,7 @@ There are 4 ways to network data with the NetWrapper library:
 * Client Vars
 * Global Vars
 
-#### Net Vars
+## Net Vars
 If you are looking to replace your existing scripts' use of the ENTITY:SetNW*/ENTITY:SetDT* functions, Net Vars
 are the way to go.
 
@@ -24,14 +24,14 @@ would with the standard networking libraries.
 
 * Setting networked values:
 
-```
+```lua
 -- if run on the server, this key/value pair will be networked to all clients
 ENTITY:SetNetVar( key, value )
 ```
 
 * Getting networked values:
 
-```
+```lua
 -- if run on the client, this will attempt to grab the value stored at the key
 ENTITY:GetNetVar( key, default )
 ```
@@ -39,10 +39,10 @@ ENTITY:GetNetVar( key, default )
 Where 'default' is the default value you would like returned if the key doesn't exist.
 If a default value isn't provided and the key doesn't exist, nil will be returned.
 
-##### Example:
+### Example:
 
 If you wanted to network a title on a player when they connect, you could do something like the following:
-```
+```lua
 hook.Add( "PlayerInitialSpawn", "SetPlayerTitle", function( ply )
     local title = ... -- grab the title somewhere
     ply:SetNetVar( "Title", title )
@@ -52,7 +52,7 @@ As soon as ply:SetNetVar() is called, a net message will be broadcasted to all c
 key/value pair for the title.
 
 If you wanted to show the player's title in a GM:PostPlayerDraw hook, you could do something like the following:
-```
+```lua
 hook.Add( "PostPlayerDraw", "ShowPlayerTitle", function( ply )
     -- retrieve the player's title if one has been networked, otherwise returns nil
     -- if a title hasn't been networked yet, don't try drawing it
@@ -65,7 +65,7 @@ hook.Add( "PostPlayerDraw", "ShowPlayerTitle", function( ply )
 end )
 ```
 
-#### Net Requests
+## Net Requests
 Net Requests are a new feature in the NetWrapper library. They allow you to determine exactly when a client asks the server
 for a value to be networked to them by using ENTITY:SendNetRequest( key ). 
 
@@ -81,13 +81,13 @@ to the client only when they ask for it (such as when they look directly at it).
 
 * Setting net requests:
 
-```
+```lua
 ENTITY:SetNetRequest( key, value ) -- if run on the server, this key/value pair will be stored in a serverside table that the client can request from
 ```
 	
 * Getting net requests:
 
-```
+```lua
 ENTITY:SendNetRequest( key ) -- when run on the client, this will send a net message to the server asking for the value stored on the entity at the given key
 ENTITY:GetNetRequest( key, default ) -- once the client has received the value from the server, subsequent calls to ENTITY:GetNetRequest() will return the value
 ```
@@ -95,17 +95,17 @@ ENTITY:GetNetRequest( key, default ) -- once the client has received the value f
 Where 'default' is the default value you would like returned if the key doesn't exist.
 If a default value isn't provided and the key doesn't exist, nil will be returned.
 	
-##### Example:
+### Example:
 
 If you want to network the owner's name on props but don't want to flood connecting clients with hundreds of possible net messages, 
 you can do something like the following:
-```
+```lua
 -- some serverside function that pairs up the player with the entity they spawned
 ent:SetNetRequest( "Owner", ply:Nick() )
 ```
 
 Now the value has been stored in the netwrapper.requests table and can be accessed by clients when they request it:
-```
+```lua
 -- somewhere clientside
 local owner = ent:GetNetRequest( "Owner" )
 if ( not owner ) then ent:SendNetRequest( "Owner" ) end
@@ -119,20 +119,20 @@ Since the 'Owner' was set earlier, the server will reply to the client's request
 When the clients receives the message, the value is stored in the netwrapper.requests table and will be retrieved with any subsequent calls to ent:GetNetRequest( "Owner" ).
 
 
-#### Client Vars
+## Client Vars
 Client Vars use the same technology as Net Vars behind the scenes, with the main difference being that the values will only be networked to that specific client.
 
 
 * Setting client values:
 
-```
+```lua
 -- if run on the server, this key/value pair will be networked to the associated player only
 PLAYER:SetClientVar( key, value )
 ```
 
 * Getting client values:
 
-```
+```lua
 -- this will attempt to grab the value stored at the key
 PLAYER:GetClientVar( key, default )
 
@@ -144,10 +144,10 @@ netwrapper.GetClientVar( key, default ) = LocalPlayer():GetClientVar( key, defau
 Where 'default' is the default value you would like returned if the key doesn't exist.
 If a default value isn't provided and the key doesn't exist, nil will be returned.
 
-##### Example:
+### Example:
 
 If you wanted to network a player's money, which other players do not need to know about
-```
+```lua
 hook.Add( "PlayerInitialSpawn", "SetPlayerMoney", function( ply )
     local money = ... -- grab the money somewhere
     ply:SetClientVar( "Money", money )
@@ -156,7 +156,7 @@ end )
 As soon as ply:SetClientVar() is called, a net message will be sent to the respective client with the key/value pair for the money.
 
 If you wanted to show the player's money in a GM:HUDPaint hook, you could do something like the following:
-```
+```lua
 hook.Add( "HUDPaint", "ShowPlayerMoney", function( )
     local money = netwrapper.GetClientVar( "Money" )
     if ( not money ) then return end 
@@ -166,21 +166,21 @@ end )
 ```
 
 
-#### Global Vars
+## Global Vars
 Global Vars are a wrapper around Net Vars.
 Internally, they translate to game.GetWorld():Set/GetNetVar()
 
 
 * Setting global values:
 
-```
+```lua
 -- if run on the server, this key/value pair will be broadcasted to all players
 netwrapper.SetGlobalVar( key, value )
 ```
 
 * Getting global values:
 
-```
+```lua
 -- this will attempt to grab the value stored at the key
 netwrapper.GetGlobalVar( key, value, default )
 
@@ -191,7 +191,7 @@ If a default value isn't provided and the key doesn't exist, nil will be returne
 
 
 
-#### Net Hooks
+## Net Hooks
 NetWrapper also exposes a hook functionality. 
 This allows you to have callback function be called whenever data changes whether it be Net Vars, Client Vars or Global Vars. 
 **Net Requests are currently unsupported.**
@@ -206,7 +206,7 @@ This makes it easy to add a hook with an entity or panel object as the identifie
 
 * Adding and removing net hooks:
 
-```
+```lua
 -- Add a hook for Global variables
 netwrapper.AddGlobalHook( key, name, fn( key, value ) )
 netwrapper.RemoveGlobalHook( key, name )
@@ -233,9 +233,9 @@ netwrapper.AddCLNetHook( key, name, fn( ent, key, value ) )
 netwrapper.RemoveCLHook( key, name )
 ```
 
-##### Example:
+### Example:
 Add a ClientVar NetHook to reflect changes in a panel that gets automatically removed when the panel is removed
-```
+```lua
 local label = vgui.Create( "DLabel" )
 
 netwrapper.AddCLNetHook( "Money", label, function( ent, key, value )
@@ -246,7 +246,7 @@ end)
 ```
 
 
-#### Persistence
+## Persistence
 NetWrapper allows you to easily restore a player's data (NetVars, NetRequests, ClientVars) if the player were to reconnect.
 
 This persistence is stored within the lua state. **This means it resets upon map change or server restart**
@@ -256,7 +256,7 @@ It is only useful for **VOLATILE** data, such as a player's score or kill count 
 When a player disconnects, any NetVars, NetRequests or ClientVars whose key has been defined as a persistent variable will be saved and associated with their Steam ID. When the player reconnects, an attempt is made at restoring those values.
 
 * Defining a persistent value:
-```
+```lua
 -- This will save any NetVar, NetRequest or GlobalVar with this key when a player disconnects.
 netwrapper.DefinePersistentVar( key )
 
@@ -269,9 +269,9 @@ netwrapper.DefinePersistentVar( key )
 netwrapper.UndefinePersistenceVar( key ) 
 ```
 
-##### Example:
+### Example:
 Store a player's temporary happiness value and restore it on reconnect
-```
+```lua
 netwrapper.DefinePersistenceVar( "Happiness" )
 
 ply:SetNetVar( "Happiness", 6 )
@@ -339,4 +339,6 @@ use ENTITY:SendNetRequest( key ) to network the value.
 ### Q: What happens to the networked data on a player that disconnected, or an entity that was removed? 
 
 A: When a player disconnects or an entity is removed, the netwrapper library will automatically sanitize its tables by 
-using the GM:EntityRemoved hook on the server and removing any data it currently has networked with that entity. The server will then send a net message to the client informing them to sanitize their clientside tables.
+using the GM:EntityRemoved hook on the server and removing any [non-persistent](#persistence) data it currently has networked with that entity. The server will then send a net message to the client informing them to sanitize their clientside tables.
+
+[Persistent](#persistence) values will be restored when a player reconnects.
