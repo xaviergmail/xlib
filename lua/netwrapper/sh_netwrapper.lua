@@ -23,6 +23,7 @@ AddCSLuaFile()
 netwrapper          = netwrapper          or {}
 netwrapper.ents     = netwrapper.ents     or {}
 netwrapper.requests = netwrapper.requests or {}
+netwrapper.hooks    = netwrapper.hooks 	  or {}
 
 --[[--------------------------------------------------------------------------
 -- 	Localized Functions & Variables
@@ -117,6 +118,27 @@ end
 
 --[[--------------------------------------------------------------------------
 --
+--	ENTITY:AddNetHook( string, string, function )
+--
+--	Adds a Net Hook that is to be called when the entity's NetVar[key] changes
+--  Uniquely identified by name to be later removed by ENTITY:RemoveNetHook
+--]]--
+function ENTITY:AddNetHook( key, name, fn )
+	netwrapper.StoreNetHook( self:EntIndex(), key, name, fn )
+end
+
+--[[--------------------------------------------------------------------------
+--
+--	ENTITY:AddNetHook( string, string, function )
+--
+--	Removes the Net Hook on this entity referred to by NetVar key and hook Name
+--]]--
+function ENTITY:RemoveNetHook( key, name )
+	netwrapper.StoreNetHook( self:EntIndex(), key, name, nil )
+end
+
+--[[--------------------------------------------------------------------------
+--
 --	netwrapper.StoreNetVar( int, string, * )
 --
 --	Stores the key/value pair of the entity into a table so that we can
@@ -126,6 +148,9 @@ end
 function netwrapper.StoreNetVar( id, key, value )
 	netwrapper.ents[ id ] = netwrapper.ents[ id ] or {}
 	netwrapper.ents[ id ][ key ] = value
+
+	netwrapper.NetVarChanged( id, key, value )
+	netwrapper.NetVarChanged( -1, key, value, id )  -- Hack: use entity ID -1 as an all-inclusive hook
 end
 
 --[[--------------------------------------------------------------------------
@@ -139,6 +164,54 @@ function netwrapper.GetNetVars( id )
 	return netwrapper.ents[ id ] or {}
 end
 
+--[[--------------------------------------------------------------------------
+--
+--	netwrapper.StoreNetHook( int, string, string, function )
+--
+--	Stores function fn tied to a NetVar key on the given entity index, identified by name
+--]]--
+function netwrapper.StoreNetHook( id, key, name, fn )
+	netwrapper.hooks[ id ] = netwrapper.hooks[ id ] or {}
+	netwrapper.hooks[ id ][ key ] = netwrapper.hooks[ id ][ key ] or {}
+	netwrapper.hooks[ id ][ key ][ name ] = fn
+end
+
+--[[--------------------------------------------------------------------------
+--
+--	netwrapper.AddNetHook( string, string, function )
+--
+--	Stores function fn tied to a NetVar key on entity index -1, identified by name (used for catch-all hooks)
+--]]--
+function netwrapper.AddNetHook( key, name, fn )
+	netwrapper.StoreNetHook( -1, key, name, fn )
+end
+
+--[[--------------------------------------------------------------------------
+--
+--	netwrapper.NetVarChanged( int, string, *, int )
+--
+--	Calls all hooks tied to the specified NetVar key with the new value
+--   that was just set. id can be 0 (worldspawn) or -1 (all entities).
+--   In case id is -1, we fall back to realid to pass the proper entity object
+--   to the hook function.
+--]]--
+function netwrapper.NetVarChanged( id, key, value, realid )
+	realid = realid or id
+
+	if netwrapper.hooks[ id ] and netwrapper.hooks[ id ][ key ] then
+		for hkName, fn in pairs( netwrapper.hooks[ id ][ key ] ) do
+			if not isstring(hkName) and not IsValid(hkName) then
+				netwrapper.hooks[ id ][ key ][ hkName ] = nil
+				continue
+			end
+			if id == 0 then
+				fn( key, value )
+			elseif IsValid( Entity( realid ) ) then
+				fn( Entity( realid ), key, value )
+			end
+		end
+	end
+end
 
 
 --[[--------------------------------------------------------------------------
