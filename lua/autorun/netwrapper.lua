@@ -2,8 +2,9 @@
 	File name:
 		autorun.lua
 	
-	Author:
+	Authors:
 		Mista-Tea ([IJWTB] Thomas)
+		xaviergmail (Xavier Bergeron)
 	
 	License:
 		The MIT License (copy/modify/distribute freely!)
@@ -47,12 +48,17 @@
 		
 		Any subsequent calls to Entity(1):GetNetVar( "TeamName" ) will 
 		 return "Another Example".
+
+		Other features, such as hooks, client-specific variables, global variables
+		 as well as persistence are also available. Please refer to the README.md
+		 as well as example.lua for more information.
 	
 	Changelog:
 		- March   9th, 2014:    Created
 		- April   5th, 2014:    Added to GitHub
 		- April   7th, 2014:    Reworded file description
 		- August 15th, 2014:    Added Net Requests
+		- April  25th, 2019:	Added Net Hooks, Global Vars, Client Vars, Persistence
 --------------------------------------------------------------------------------]]
 
 print( "[NetWrapper] Initializing netwrapper library" )

@@ -2,8 +2,9 @@
 	File name:
 		example.lua
 	
-	Author:
+	Authors:
 		Mista-Tea ([IJWTB] Thomas)
+		xaviergmail (Xavier Bergeron)
 	
 	License:
 		The MIT License (copy/modify/distribute freely!)
@@ -12,11 +13,18 @@
 		- March   9th, 2014:    Created
 		- April   5th, 2014:    Added to GitHub
 		- August 16th, 2014:    Rewrote example for Net Vars / Net Requests
+		- April  25th, 2019:	Added examples for Client Vars / Global Vars / Hooks
+
+
 ----------------------------------------------------------------------------]]
 
 -- In this example, we will assign a player's name to the prop they spawn in PlayerSpawnedProp.
 -- We'll use Net Vars in the first example to show how they automatically network themselves,
 -- and then show how Net Requests can be used to ask for the value to be networked manually.
+-- We will also cover global variables as well as client variables which are only sent to 
+-- the specific client which is useful to reduce network impact.
+
+-- Example usage of hooks has been scattered throughout these examples
 
 
 

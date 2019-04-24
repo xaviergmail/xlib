@@ -2,8 +2,9 @@
 	File name:
 		sv_netwrapper.lua
 	
-	Author:
+	Authors:
 		Mista-Tea ([IJWTB] Thomas)
+		xaviergmail (Xavier Bergeron)
 	
 	License:
 		The MIT License (copy/modify/distribute freely!)
@@ -12,6 +13,7 @@
 		- March 9th,   2014:    Created
 		- April 5th,   2014:    Added to GitHub
 		- August 15th, 2014:    Added Net Requests
+		- April  25th, 2019:	Added Net Hooks, Global Vars, Client Vars, Persistence
 ----------------------------------------------------------------------------]]
 
 --[[--------------------------------------------------------------------------
