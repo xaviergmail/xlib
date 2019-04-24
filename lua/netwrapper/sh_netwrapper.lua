@@ -213,6 +213,51 @@ function netwrapper.NetVarChanged( id, key, value, realid )
 	end
 end
 
+--[[--------------------------------------------------------------------------
+--	GLOBAL NET VARS 
+--  Wrapper around netvar functions applied on the game.GetWorld() entity
+--------------------------------------------------------------------------]]--
+
+--[[--------------------------------------------------------------------------
+--
+--	netwrapper.SetGlobalVar( string, *, boolean [optional] )
+--
+--  Equivalent to game.GetWorld():SetNetVar( ... )
+--]]--
+
+function netwrapper.SetGlobalVar( key, value, force )
+	game.GetWorld():SetNetVar( key, value, force )
+end
+
+--[[--------------------------------------------------------------------------
+--
+--	netwrapper.GetGlobalVar( string, * )
+--
+--  Equivalent to game.GetWorld():GetNetVar( ... )
+--]]--
+function netwrapper.GetGlobalVar( key, default )
+	return game.GetWorld():GetNetVar( key, default )
+end
+
+--[[--------------------------------------------------------------------------
+--
+--	netwrapper.AddGlobalHook( string, string, function )
+--
+--	Equivalent to game.GetWorld():AddNetHook( ... )
+--]]--
+function netwrapper.AddGlobalHook( key, name, fn )
+	game.GetWorld():AddNetHook( key, name, fn )
+end
+
+--[[--------------------------------------------------------------------------
+--
+--	netwrapper:RemoveGlobalHook( string, string, function )
+--
+--	Equivalent to game.GetWorld():RemoveNetHook( ... )
+--]]--
+function netwrapper:RemoveGlobalHook( key, name )
+	game.GetWorld():RemoveNetHook( key, name )
+end
 
 --[[--------------------------------------------------------------------------
 --	NET REQUESTS
