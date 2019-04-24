@@ -120,7 +120,7 @@ end
 
 --[[--------------------------------------------------------------------------
 --
---	ENTITY:AddNetHook( string, string, function )
+--	ENTITY:AddNetHook( string, string, function( entity, key, value ) )
 --
 --	Adds a Net Hook that is to be called when the entity's NetVar[key] changes
 --  Uniquely identified by name to be later removed by ENTITY:RemoveNetHook
@@ -131,7 +131,7 @@ end
 
 --[[--------------------------------------------------------------------------
 --
---	ENTITY:AddNetHook( string, string, function )
+--	ENTITY:AddNetHook( string, string )
 --
 --	Removes the Net Hook on this entity referred to by NetVar key and hook Name
 --]]--
@@ -168,7 +168,7 @@ end
 
 --[[--------------------------------------------------------------------------
 --
---	netwrapper.StoreNetHook( int, string, string, function )
+--	netwrapper.StoreNetHook( int, string, string, function( entity, key, value ) )
 --
 --	Stores function fn tied to a NetVar key on the given entity index, identified by name
 --]]--
@@ -180,9 +180,11 @@ end
 
 --[[--------------------------------------------------------------------------
 --
---	netwrapper.AddNetHook( string, string, function )
+--	netwrapper.AddNetHook( string, string, function( entity, key, value ) )
 --
---	Stores function fn tied to a NetVar key on entity index -1, identified by name (used for catch-all hooks)
+--	Stores function fn tied to a NetVar key on entity index -1, identified by name
+--  This is a catch-all hook, meaning the hook is called whenever the NetVar of key
+--   changes on any entity.
 --]]--
 function netwrapper.AddNetHook( key, name, fn )
 	netwrapper.StoreNetHook( -1, key, name, fn )
@@ -265,7 +267,7 @@ netwrapper.CLNetHookPrefix = "ClientVar_"
 
 --[[--------------------------------------------------------------------------
 --
---	PLAYER:AddCLNetHook( string, string, function )
+--	PLAYER:AddCLNetHook( string, string, function( entity, key, value ) )
 --
 --	Adds a Net Hook that is to be called when the player's ClientVar[key] changes
 --  Uniquely identified by name to be later removed by ENTITY:RemoveCLNetHook
@@ -340,7 +342,7 @@ end
 
 --[[--------------------------------------------------------------------------
 --
---	netwrapper.AddGlobalHook( string, string, function )
+--	netwrapper.AddGlobalHook( string, string, function( key, value ) )
 --
 --	Equivalent to game.GetWorld():AddNetHook( ... )
 --]]--
@@ -350,7 +352,7 @@ end
 
 --[[--------------------------------------------------------------------------
 --
---	netwrapper:RemoveGlobalHook( string, string, function )
+--	netwrapper:RemoveGlobalHook( string, string, function( key, value ) )
 --
 --	Equivalent to game.GetWorld():RemoveNetHook( ... )
 --]]--
