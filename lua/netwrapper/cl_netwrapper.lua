@@ -86,6 +86,9 @@ hook.Add( "OnEntityCreated", "NetWrapperSync", function( ent )
 	
 	for key, value in pairs( values ) do
 		ent:SetNetVar( key, value )
+
+		netwrapper.NetVarChanged( id, key, value )
+		netwrapper.NetVarChanged( -1, key, value, id )  -- Hack: use entity ID -1 as an all-inclusive hook
 	end
 end )
 
