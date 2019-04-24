@@ -203,7 +203,8 @@ end
 --  Returns: The modified input table
 --]]--
 function netwrapper.FilterPersistentVars( tbl )
-	for k, v in pairs( tbl or {} ) do
+	tbl = tbl or {}
+	for k, v in pairs( tbl ) do
 		if not netwrapper.persistentvars[ k ] then
 			tbl[ k ] = nil
 		end
