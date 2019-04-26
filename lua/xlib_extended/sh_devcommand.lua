@@ -1,5 +1,3 @@
-if not GetGlobalBool("xlib_extended") then return end
-
 local function luacmd(ply, cmd, args, argstr)
 	local env = {}
 	env.me = ply
@@ -51,7 +49,7 @@ end
 function DevCommand(cmd, fn, realm)
 	realm = realm or SERVER
 	concommand.Remove(cmd)
-	if not realm then return end
+	if realm ~= nil and not realm then return end
 
 	concommand.Add(cmd, function(ply, cmd, args, argstr)
 		if not IsValid(ply) or (ply.IsDeveloper and ply:IsDeveloper()) then
