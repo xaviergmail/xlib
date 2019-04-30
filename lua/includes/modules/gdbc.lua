@@ -456,7 +456,7 @@ local function connect(i)
 	end
 
 	function db:onConnectionFailed(err)
-		Error(i.database..": Database connection failed with username ".. i.user)
+		Error("Database '"..i.database.."' - connection failed with username ".. i.user .."\n")
 	end
 
     db:connect()
