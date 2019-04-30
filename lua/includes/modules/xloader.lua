@@ -1,5 +1,9 @@
 AddCSLuaFile()
 
+_R = debug.getregistry()
+_E = _R.Entity
+_P = _R.Player
+
 local green = Color(0, 255, 150)
 local function log(...)
 	local s = "XLoader: "
