@@ -588,7 +588,7 @@ hook.Add("Initialize", "InitSchemas", function()
 	end)
 end)
 
-if not CheckPassword_DB then
+if not CHECKPASSWORD_DB then
 	CHECKPASSWORD_DB = true
 	hook.Add("CheckPassword", "GDBC:WaitForMigrations", function()
 		return false, "Server is starting up. Try again in 30 seconds!"
