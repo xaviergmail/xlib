@@ -1,11 +1,8 @@
 if SERVER then
-	if GetGlobalBool("xlib_extended") then
+	if XLIB.Extended then
 		AddCSLuaFile()
 	else
 		return
 	end
 end
-
-require "xloader"
-
 xloader("xlib_extended", function(f) include(f) end)

@@ -36,6 +36,7 @@ _G.CREDENTIALS = creds
 if creds.extended then
 	SetGlobalBool("development_mode", CREDENTIALS.development_mode == 1)	
 	SetGlobalBool("xlib_extended", CREDENTIALS.extended == 1)
+	XLIB.Extended = true
 end
 
 module ("credentialstore")
