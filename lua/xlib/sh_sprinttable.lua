@@ -1,3 +1,16 @@
+--- Functionally identical to print() but returns the string instead of printing it.
+-- The varargs passed are automatically tostring()'d and concatenated by a single space.
+function SPrint(...)
+	local str = ""
+
+	local args = {...}
+	for k, v in ipairs(args) do
+		str = str .. " " .. tostring(v)
+	end
+
+	return str:Trim()
+end
+--- Functionally identical to PrintTable() but returns the string instead of printing it.
 local buffer = ""
 function SPrintTable(t, indent, done)
 
