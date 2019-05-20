@@ -192,12 +192,22 @@ DetectionFuncs = {
 DetectionFuncs["GAMEMODE"] = DetectionFuncs["GM"];
 
 local LUAJIT_VERSION = "(.+) (%d+%.%d+%.%d+)";
+
+local version_blacklist = {
+	CREDENTIALS = true,
+	credentials = true,
+	cretentialstore = true,
+}
+
 ---
 -- Loops through _G and tries to find anything with some variant of a VERSION field.
 local function detectModules()
 	local VERSION = g["VERSION"];
 
 	for name, value in pairs(g) do
+		 -- Avoid warning from credential store about unset value being accessed
+		if version_blacklist[name] then continue end
+
 		local func = DetectionFuncs[name];
 		if (func) then
 			-- Overrides
