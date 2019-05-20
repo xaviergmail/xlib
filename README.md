@@ -240,7 +240,7 @@ end
 
 Some of the main features include:
 * Automatically `include()` and `AddCSLuaFile()` files in the specified directory
-* Auto-refresh aware (Upstream bug)[https://github.com/Facepunch/garrysmod-issues/issues/935]
+* Auto-refresh aware [Upstream bug](https://github.com/Facepunch/garrysmod-issues/issues/935)
 * Predictable
 
 The include order is as follows:
@@ -262,7 +262,9 @@ This is a part of XLIB disabled by default for use in packaged applications.
 To enable, simply set `extended "1"` in your `CREDENTIAL_STORE`
 
 The current features include:
-#### `DevCommand(cmdname, callback(ply, cmd, args, arg_str), realm=SERVER)`
+### DevCommand
+`DevCommand(cmdname, callback(ply, cmd, args, arg_str), realm=SERVER)`
+
 This requires a function `IsDeveloper` (not provided by XLIB at this time) to be present on the Player metatable.
 Functionally similar to concommand.Add, this takes care of the boilerplate of doing concommand authentication.
 
@@ -282,5 +284,42 @@ It also provides some useful shorthand globals to help you avoid the low charact
 | metrent     | me:GetEyeTrace().Entity    |
 
 
+### gmod-sentry
+This library packages [gmod-sentry](https://github.com/Lexicality/gmod-sentry) with CREDENTIAL_STORE support for convenience.
 
+To enable, simply add and customize the following to your `GarrysMod/garrysmod/CREDENTIAL_STORE` file
+```
+sentry
+{
+    dsn "https://dsn_example@sentry.io/dsn_example"
+    // auto "false" 
+    
+    // The following are all optional, this is passed directly to sentry.Setup
+    options {
+        server_name "Sandbox-1"
+        environment "Production"
+        // release ""
 
+        // tags {
+        //     foo "bar"
+        // }
+
+        // no_detour "hook.Call net.Receive"  // space-separated
+    }
+}
+```
+
+View [gmod-sentry Setup Options](https://github.com/Lexicality/gmod-sentry/blob/36f8899963c4c55898a433662c0f71c28aeb0488/README.md#sentrysetup) for more documentation on the sentry options.
+
+Alternatively, if you want to have dynamic control over the `sentry.Setup` call, set `auto "false"` and use the following code:
+```lua
+require "credentialstore"
+require "xlib_sentry"
+
+if CREDENTIALS.sentry then
+    local options = CREDENTIALS.sentry.options or {}
+
+    options.release = (GM or GAMEMODE).Version  -- Or anything else
+    sentry.Setup(CREDENTIALS.sentry.dsn, options)
+end
+```
