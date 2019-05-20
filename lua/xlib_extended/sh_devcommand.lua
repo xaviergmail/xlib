@@ -1,4 +1,9 @@
 local function luacmd(ply, cmd, args, argstr)
+	if not IsValid(ply) then
+		RunString(argstr)
+		return
+	end
+
 	local env = {}
 	env.me = ply
 	env.metr = ply:GetEyeTrace()
