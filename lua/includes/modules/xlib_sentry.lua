@@ -655,13 +655,21 @@ end
 -- @param err The normalised error string (no filepath included)
 -- @param stacktrace The Lua stacktrace for the error
 -- @param extra Any additional context for the error
+-- @param[opt] ply Player object of the client the error occurred on
 -- @return A full sentry object ready to be JSON'd and uplodaded
-local function buildPayload(err, stacktrace, extra)
+local function buildPayload(err, stacktrace, extra, ply)
 	local txn = getTransactionData();
 	table.Merge(txn, extra)
 
 	local tags = getTags(txn);
 	table.Add(tags, calculateBlame(stacktrace));
+
+	tags["Realm"] = ply and "CLIENT" or "SERVER"
+
+	if ply then
+		extra["user"] = ply
+		tags["Player"] = ply:SteamID()
+	end
 
 	return {
 		event_id = UUID4(),
@@ -769,13 +777,14 @@ end
 -- @param err The normalised error string (no filepath included)
 -- @param stack The Lua stacktrace for the error
 -- @param extra Any additional context for the error
+-- @param[opt] ply Player object of the client the error occurred on 
 -- @return The generated event ID
-local function proccessException(err, stack, extra)
+local function proccessException(err, stack, extra, ply)
 	if (not extra) then
 		extra = {};
 	end
 
-	local payload = buildPayload(err, stack, extra);
+	local payload = buildPayload(err, stack, extra, ply);
 
 	SendToServer(payload);
 
@@ -806,6 +815,31 @@ local function OnLuaError(is_runtime, rawErr, file, lineno, err, stack)
 
 	proccessException(err, stack);
 end
+
+---
+-- The gm_luaerror hook at the heart of this module (clientside errors)
+-- @param ply Player object of the client the error occurred on
+-- @param rawErr The full error that gets printed in console.
+-- @param file The filename extracted from rawErr
+-- @param lineno The line number extracte from rawErr
+-- @param err The error string extracted from rawErr
+-- @param stack The captured stack trace for the error. May be empty
+-- @return Nothing or you'll break everything
+local function OnClientLuaError(ply, rawErr, file, lineno, err, stack)
+	if (not shouldReport(rawErr)) then
+		return;
+	end
+	if (#stack == 0) then
+		stack[1] = {
+			name = "<unknown>",
+			source = '@' .. file,
+			currentline = lineno,
+		}
+	end
+
+	proccessException(err, stack, nil, ply);
+end
+
 
 ---
 -- Captures an exception for sentry, using the current stack as the error's stack
@@ -1429,6 +1463,7 @@ function Setup(dsn, extra)
 
 
 	hook.Add("LuaError", "Sentry Integration", OnLuaError);
+	hook.Add("ClientLuaError", "Sentry Integration", OnClientLuaError);
 
 	-- Once the server has initialised, get all the things with a "version" field
 	hook.Add("Initialize", "Sentry Integration", detectModules)
