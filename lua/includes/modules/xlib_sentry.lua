@@ -1382,6 +1382,23 @@ local function parseDSN(dsn)
 	config.endpoint = scheme .. host .. "/api/" .. project .. "/store/";
 end
 
+---
+-- Enables all gm_luaerror detours
+function EnableLuaerrorDetours()
+	local function tryDetour(name)
+		local succ, err = luaerror["Enable"..name.."Detour"](true);
+		if not succ then
+			XLIB.WarnTrace("XLIB Sentry: luaerror detour failed for", name);
+		else
+			print("XLIB Sentry: Detoured", name)
+		end
+	end
+
+	for _, name in ipairs {"Runtime", "Compiletime", "Client"} do
+		tryDetour(name);
+	end
+end
+
 local settables = { "tags", "release", "environment", "server_name", "no_detour" }
 ---
 -- Configures and activates Sentry
@@ -1405,8 +1422,11 @@ function Setup(dsn, extra)
 
 	doDetours();
 
-	luaerror.EnableRuntimeDetour(true);
-	luaerror.EnableCompiletimeDetour(true);
+	EnableLuaerrorDetours();
+
+	-- Some addons override gm_luaerror's detours, so re-detour them after Initialize
+	hook.Add("Initialize", "Sentry Integration - gm_luaerror", EnableLuaerrorDetours);
+
 
 	hook.Add("LuaError", "Sentry Integration", OnLuaError);
 
