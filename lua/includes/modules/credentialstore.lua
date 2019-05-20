@@ -26,7 +26,7 @@ local mt = {
 			return defaults[k]
 		end
 		ErrorNoHalt(fmterr("Tried to read credentials for "..(tostring(k))
-			         .." but it was not set in the "..credential_store.." file!"))
+			         .." but it was not set in the "..credential_store.." file!\n"))
 	end
 }
 
