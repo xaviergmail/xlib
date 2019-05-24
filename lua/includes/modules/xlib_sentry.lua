@@ -33,6 +33,7 @@ local HTTP = HTTP;
 local IsValid = IsValid;
 local ServerLog = ServerLog;
 local SysTime = SysTime;
+local RealTime = RealTime;
 local bit = bit;
 local error = error;
 local hook = hook;
@@ -241,11 +242,41 @@ end
 --
 local retryAfter = nil;
 local skipNext = nil;
+local errHist = {};
+
+---
+-- Rate-limit specific errors to avoid error spam in Tick hooks
+-- rate-limiting the entire error reporting system.
+-- @param err The FULL error message including embedded where line
+-- @return true if this specific error is currently being rate-limited, false if not
+local function rateLimit(err)
+	local block = false;
+	if errHist[err] and errHist[err] > RealTime() then
+		block = true;
+	end
+
+	-- Limit reporting a specific error only once every 30 seconds
+	errHist[err] = RealTime() + 30;
+
+	-- Clear error history to save up on RAM (stacktraces are big and accumulate over time)
+	for err, expires in pairs(errHist) do
+		if expires <= RealTime() then
+			errHist[err] = nil;
+		end
+	end
+
+	return block;
+end
+
 ---
 -- Checks if an error should be reported to sentry
 -- @param err The FULL error message including embedded where line
 -- @return true to report, false to discard
 local function shouldReport(err)
+	if rateLimit(err) then
+		return false;
+	end
+
 	if (not config.endpoint) then
 		return false;
 	elseif (retryAfter ~= nil) then
