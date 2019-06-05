@@ -7,3 +7,6 @@ function XLIB.PostInitialize(fn)
 		hook.Add("Initialize", "XLIB.PostInitialize"..tostring(fn), fn)
 	end
 end
+_R = debug.getregistry()
+_P = _R.Player
+_E = _R.Entity
