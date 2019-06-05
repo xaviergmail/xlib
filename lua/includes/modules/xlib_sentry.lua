@@ -450,7 +450,7 @@ local function stripFileData(err, stack)
 	end
 
 	for _, frame in pairs(stack) do
-		if (frame["source"] == "@" .. file and tostring(frame["currentline"]) == tostring(line)) then
+		if (frame["source"] == "@" .. (file or '[?]') and tostring(frame["currentline"]) == tostring(line)) then
 			err = err:sub(#match + 1);
 			break;
 		end
@@ -808,7 +808,7 @@ local function OnLuaError(is_runtime, rawErr, file, lineno, err, stack)
 	if (#stack == 0) then
 		stack[1] = {
 			name = is_runtime and "<unknown>" or "<compile>",
-			source = '@' .. file,
+			source = '@' .. (file or '[?]'),
 			currentline = lineno,
 		}
 	end
@@ -832,7 +832,7 @@ local function OnClientLuaError(ply, rawErr, file, lineno, err, stack)
 	if (#stack == 0) then
 		stack[1] = {
 			name = "<unknown>",
-			source = '@' .. file,
+			source = '@' .. (file or '[?]'),
 			currentline = lineno,
 		}
 	end
