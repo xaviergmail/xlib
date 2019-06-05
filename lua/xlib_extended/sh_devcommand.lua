@@ -73,3 +73,16 @@ end
 
 DevCommand("lua", luacmd)
 DevCommand("luacl", luacmd, CLIENT)
+
+DevCommand("manybots", function()
+	for i=0, 10 do
+		RunConsoleCommand("bot")
+	end
+end)
+
+DevCommand("nobots", function()
+	for k, v in pairs(player.GetBots()) do
+		v:Kick()
+	end
+	
+end)
