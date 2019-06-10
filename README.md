@@ -323,3 +323,9 @@ if CREDENTIALS.sentry then
     sentry.Setup(CREDENTIALS.sentry.dsn, options)
 end
 ```
+
+
+### NetWrapper
+This library packages my fork of [netwrapper](https://github.com/xaviergmail/netwrapper).
+
+NetWrapper is a lightweight, bandwidth-focused wrapper around the existing `net` library. You can view its documentation [here](./lua/xlib/netwrapper) as well as examples [here](./lua/xlib/netwrapper/example.lua)
