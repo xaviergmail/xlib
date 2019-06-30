@@ -1,7 +1,4 @@
 SScale = ScreenScale  -- Alias
-local hook, math, ScrW, ScrH, ScreenScale
-	= hook, math, ScrW, ScrH, ScreenScale
-
 hook.Add("Initialize", "Resolution / Change", function()
 	vgui.CreateFromTable {
 		Base = "Panel",
@@ -22,7 +19,7 @@ hook.Add("Initialize", "Resolution / Change", function()
 	end)
 end)
 
-module("xui")
+module("xui", package.seeall)
 
 function H()
 	return math.min(ScrH(), 768)
