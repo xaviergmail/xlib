@@ -68,3 +68,15 @@ end
 hook.Add("ResolutionChanged", "ResolutionChanged_UIUtil_Padding", function()
 	padding = ScreenScale(5)
 end)
+
+local progressCols = {}
+local hue = {val=0}
+local tween = tween.new(100, hue, {val=150}, 'inCirc')
+for i=0, 100 do
+	tween:set(i)
+	progressCols[i] = HSVToColor(math.min(120, hue.val), 1, 1)
+end
+
+function ProgressColor(scalar)
+	return progressCols[math.floor(math.Clamp(scalar, 0, 1)*100)]
+end
