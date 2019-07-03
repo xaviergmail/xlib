@@ -24,3 +24,7 @@ end)
 _R = debug.getregistry()
 _P = _R.Player
 _E = _R.Entity
+
+NOOP = function() end
+TRUE = function() return true end
+FALSE = function() return false end
