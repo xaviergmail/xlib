@@ -288,6 +288,17 @@ function PLAYER:RemoveCLNetHook( key, name )
 	netwrapper.StoreNetHook( self:EntIndex(), netwrapper.CLNetHookPrefix .. key, name, nil )
 end
 
+--[[--------------------------------------------------------------------------
+--
+--	netwrapper.AddCLNetHook( string, string, function( entity, key, value ) )
+--
+--	Stores function fn tied to a ClientVar key on entity index -1, identified by name
+--  This is a catch-all hook, meaning the hook is called whenever the ClientVar of key
+--   changes on any entity.
+--]]--
+function netwrapper.AddCLNetHook( key, name, fn )
+	netwrapper.StoreNetHook( -1, netwrapper.CLNetHookPrefix .. key, name, fn )
+end
 
 --[[--------------------------------------------------------------------------
 --
