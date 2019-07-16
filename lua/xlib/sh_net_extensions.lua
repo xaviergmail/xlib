@@ -1,5 +1,11 @@
 function net.WriteCompressed(str)
-	local compressed, len = util.Compress(str)
+	local compressed = util.Compress(str)
+	local len = #(compressed or {})
+
+	if not compressed or not len then
+		compressed, len = "", 0
+	end
+	
 	net.WriteUInt(len, 32)
 	net.WriteData(compressed, len)
 end
