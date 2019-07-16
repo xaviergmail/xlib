@@ -1,27 +1,45 @@
-local function luacmd(ply, cmd, args, argstr)
-	if not IsValid(ply) then
-		RunString(argstr)
-		return
+local function concat(...)
+	local s = ""
+	local t = {...}
+	for k, v in pairs(t) do
+		s = s .. " " .. tostring(v)
 	end
 
-	local env = {}
-	env.me = ply
-	env.metr = ply:GetEyeTrace()
-	env.metrent = env.metr.Entity
-	if SERVER then
-		env.print = function(...)
-			local s = ""
-			local t = {...}
-			for k, v in pairs(t) do
-				s = s .. " " .. tostring(v)
-			end
-			s = s:Trim()
-			net.Start("luaoutput")
-			net.WriteString(s)
-			net.Send(ply)
-		end
+	return s:Trim()
+end
+
+function longprint(...)
+	local s = ""
+	if select("#", ...) > 1 then
+		s = concat(...)
 	else
-		env.print = print
+		s = select(1, ...)
+	end
+
+	s = tostring(s)
+
+	local len = #s
+	local incr = 1024
+	for i=1, len, 1000 do
+		MsgC(color_white, s:sub(i, len))
+	end
+
+	Msg("\n")
+end
+
+local function luacmd(ply, cmd, args, argstr)
+	local env = { print = longprint }
+	if IsValid(ply) then
+		env.me = ply
+		env.metr = ply:GetEyeTrace()
+		env.metrent = env.metr.Entity
+		if SERVER then
+			env.print = function(...)
+				net.Start("luaoutput")
+				net.WriteCompressed(concat(...))
+				net.Send(ply)
+			end
+		end
 	end
 
 	env.Msg = env.print
@@ -36,18 +54,29 @@ local function luacmd(ply, cmd, args, argstr)
 		__newindex = function(t, k, v) rawset(_G, k, v) end,
 	})
 
-	local fn, err = CompileString(argstr, ply:SteamID()..".lua", false)
+	local id = (IsValid(ply) and ply:SteamID() or "CONSOLE")..".lua"
+	local fn, err = CompileString("return " .. argstr, id, false)
 	if not isfunction(fn) then
-		env.print(fn)
-		env.print(err)
-		return
+		fn, err = CompileString(argstr, id, false)
+		if not isfunction(fn) then
+			env.print("Could not compile:", err)
+			return
+		end
 	end
 	fn = setfenv(fn, env)
 
-	local succ, err = pcall(fn)
+	local ret = {pcall(fn)}
 
-	if not succ then
-		env.print(err)
+	if not table.remove(ret, 1) then
+		env.print(table.unpack(ret))
+	else
+		for _, r in ipairs(ret) do
+			if istable(r) and not f.islist(r) then
+				env.print(r, ": ", SPrintTable(r, 0, r, false))
+			else
+				env.print(r)
+			end
+		end
 	end
 end
 
@@ -67,7 +96,7 @@ if SERVER then
 	util.AddNetworkString("luaoutput")
 else
 	net.Receive("luaoutput", function()
-		print(net.ReadString())
+		longprint(net.ReadCompressed())
 	end)
 end
 
@@ -84,5 +113,4 @@ DevCommand("nobots", function()
 	for k, v in pairs(player.GetBots()) do
 		v:Kick()
 	end
-	
 end)
