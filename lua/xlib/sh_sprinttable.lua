@@ -12,9 +12,16 @@ function SPrint(...)
 end
 --- Functionally identical to PrintTable() but returns the string instead of printing it.
 local buffer = ""
-function SPrintTable(t, indent, done)
+function SPrintTable(t, indent, done, recurse)
+	if recurse == nil then
+		recurse = true	
+	end
 
-	done = done or {}
+	if isbool(indent) then
+		recurse = indent
+	end
+
+	done = done or t
 	indent = indent or 0
 	local keys = table.GetKeys(t)
 
@@ -28,7 +35,7 @@ function SPrintTable(t, indent, done)
 		value = t[ key ]
 		buffer = buffer..(string.rep("\t", indent))
 
-		if  (istable(value) && !done[ value ]) then
+		if  (recurse && istable(value) && !done[ value ]) then
 
 			done[ value ] = true
 			buffer = buffer..(tostring(key) .. ":" .. "\n")
