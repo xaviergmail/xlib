@@ -194,6 +194,16 @@ end
 
 --[[--------------------------------------------------------------------------
 --
+--	netwrapper.RemoveNetHook( string, string )
+--
+--	Removes hook function tied to a NetVar key on entity index -1, identified by name
+--]]--
+function netwrapper.RemoveNetHook( key, name )
+	netwrapper.StoreNetHook( -1, key, name, nil  )
+end
+
+--[[--------------------------------------------------------------------------
+--
 --	netwrapper.NetVarChanged( int, string, *, int )
 --
 --	Calls all hooks tied to the specified NetVar key with the new value
