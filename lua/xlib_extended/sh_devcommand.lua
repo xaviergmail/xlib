@@ -1,3 +1,5 @@
+local unpack = (unpack or table.unpack)
+
 local function concat(...)
 	local s = ""
 	local t = {...}
@@ -68,7 +70,7 @@ local function luacmd(ply, cmd, args, argstr)
 	local ret = {pcall(fn)}
 
 	if not table.remove(ret, 1) then
-		env.print(table.unpack(ret))
+		env.print(unpack(ret))
 	else
 		for _, r in ipairs(ret) do
 			if istable(r) and not f.islist(r) then

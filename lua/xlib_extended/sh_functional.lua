@@ -1,3 +1,4 @@
+local unpack = (unpack or table.unpack)
 f = f or {}
 
 f.toFunction = function (func)
@@ -29,7 +30,14 @@ f.toString = function (v)
 	return tostring (v)
 end
 
-f.apply  = function (f, x) return function (...) return f (x, ...) end end
+f.apply  = function (f, ...)
+	local args = {...}
+	return function (...)
+		table.Add(args, {...})
+		return f (unpack(args))
+	end
+end
+
 f.call   = function (f, ...) return f (...) end
 f.concat = table.concat
 
