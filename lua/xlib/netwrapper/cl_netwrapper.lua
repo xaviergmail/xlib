@@ -91,11 +91,11 @@ hook.Add( "OnEntityCreated", "NetWrapperSync", function( ent )
 	local id = ent:EntIndex()
 	
 	for key, value in pairs( netwrapper.GetNetVars( id ) ) do
-		ent:SetNetVar( key, value )
+		ent:SetNetVar( key, value, true )
 	end
 
 	for key, value in pairs( netwrapper.GetClientVars( id ) ) do
-		ent:SetClientVar( key, value )
+		ent:SetClientVar( key, value, true )
 	end
 end )
 
