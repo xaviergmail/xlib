@@ -204,20 +204,21 @@ end
 
 --[[--------------------------------------------------------------------------
 --
---	netwrapper.NetVarChanged( int, string, *, int )
+--	netwrapper.NetVarChanged( int, string, *, int, bool )
 --
 --	Calls all hooks tied to the specified NetVar key with the new value
 --   that was just set. id can be 0 (worldspawn) or -1 (all entities).
 --   In case id is -1, we fall back to realid to pass the proper entity object
 --   to the hook function.
 --]]--
-function netwrapper.NetVarChanged( id, key, value, realid )
+function netwrapper.NetVarChanged( id, key, value, realid, clvar )
 	realid = realid or id
+	local realkey = clvar and netwrapper.CLNetHookPrefix .. key or key
 
-	if netwrapper.hooks[ id ] and netwrapper.hooks[ id ][ key ] then
-		for hkName, fn in pairs( netwrapper.hooks[ id ][ key ] ) do
+	if netwrapper.hooks[ id ] and netwrapper.hooks[ id ][ realkey ] then
+		for hkName, fn in pairs( netwrapper.hooks[ id ][ realkey ] ) do
 			if not isstring(hkName) and not IsValid(hkName) then
-				netwrapper.hooks[ id ][ key ][ hkName ] = nil
+				netwrapper.hooks[ id ][ realkey ][ hkName ] = nil
 				continue
 			end
 			if id == 0 then
@@ -322,8 +323,8 @@ function netwrapper.StoreClientVar( id, key, value )
 	netwrapper.clients[ id ] = netwrapper.clients[ id ] or {}
 	netwrapper.clients[ id ][ key ] = value
 
-	netwrapper.NetVarChanged( id, netwrapper.CLNetHookPrefix .. key, value )
-	netwrapper.NetVarChanged( -1, netwrapper.CLNetHookPrefix .. key, value, id )  -- Hack: use entity ID -1 as an all-inclusive hook
+	netwrapper.NetVarChanged( id, key, value, id, true )
+	netwrapper.NetVarChanged( -1, key, value, id, true )  -- Hack: use entity ID -1 as an all-inclusive hook
 end
 
 --[[--------------------------------------------------------------------------
