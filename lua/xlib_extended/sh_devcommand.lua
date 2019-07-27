@@ -74,7 +74,7 @@ local function luacmd(ply, cmd, args, argstr)
 	else
 		for _, r in ipairs(ret) do
 			if istable(r) and not f.islist(r) then
-				env.print(r, ": ", SPrintTable(r, 0, r, false))
+				env.print(r, ": PrintTable v\n", SPrintTable(r, 0, r, false))
 			else
 				env.print(r)
 			end
