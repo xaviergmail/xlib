@@ -21,7 +21,7 @@ function SPrintTable(t, indent, done, recurse)
 		recurse = indent
 	end
 
-	done = done or t
+	done = done or {}
 	indent = indent or 0
 	local keys = table.GetKeys(t)
 
