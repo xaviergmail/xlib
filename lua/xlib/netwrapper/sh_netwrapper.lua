@@ -151,10 +151,12 @@ end
 --]]--
 function netwrapper.StoreNetVar( id, key, value )
 	netwrapper.ents[ id ] = netwrapper.ents[ id ] or {}
+
+	local old = netwrapper.ents[ id ][ key ]
 	netwrapper.ents[ id ][ key ] = value
 
-	netwrapper.NetVarChanged( id, key, value )
-	netwrapper.NetVarChanged( -1, key, value, id )  -- Hack: use entity ID -1 as an all-inclusive hook
+	netwrapper.NetVarChanged( id, key, value, old )
+	netwrapper.NetVarChanged( -1, key, value, old, id )  -- Hack: use entity ID -1 as an all-inclusive hook
 end
 
 --[[--------------------------------------------------------------------------
@@ -211,7 +213,7 @@ end
 --   In case id is -1, we fall back to realid to pass the proper entity object
 --   to the hook function.
 --]]--
-function netwrapper.NetVarChanged( id, key, value, realid, clvar )
+function netwrapper.NetVarChanged( id, key, value, old, realid, clvar )
 	realid = realid or id
 	local realkey = clvar and netwrapper.CLNetHookPrefix .. key or key
 
@@ -222,9 +224,9 @@ function netwrapper.NetVarChanged( id, key, value, realid, clvar )
 				continue
 			end
 			if id == 0 then
-				fn( key, value )
+				fn( key, value, old )
 			elseif IsValid( Entity( realid ) ) then
-				fn( Entity( realid ), key, value )
+				fn( Entity( realid ), key, value, old )
 			end
 		end
 	end
@@ -321,10 +323,12 @@ end
 --]]--
 function netwrapper.StoreClientVar( id, key, value )
 	netwrapper.clients[ id ] = netwrapper.clients[ id ] or {}
+
+	local old = netwrapper.clients[ id ][ key ]
 	netwrapper.clients[ id ][ key ] = value
 
-	netwrapper.NetVarChanged( id, key, value, id, true )
-	netwrapper.NetVarChanged( -1, key, value, id, true )  -- Hack: use entity ID -1 as an all-inclusive hook
+	netwrapper.NetVarChanged( id, key, value, old, id, true )
+	netwrapper.NetVarChanged( -1, key, value, old, id, true )  -- Hack: use entity ID -1 as an all-inclusive hook
 end
 
 --[[--------------------------------------------------------------------------
