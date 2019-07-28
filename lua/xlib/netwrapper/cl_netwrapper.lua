@@ -53,17 +53,42 @@ local ENTITY = FindMetaTable( "Entity" )
 --	 on the client to automatically retrieve the value for us without relying
 --	 on multiple functions (like ReadEntity, ReadString, etc).
 --]]--
-net.Receive( "NetWrapperVar", function( len )
-	local entid  = net.ReadUInt( 16 )
-	local key    = net.ReadString()
-	local typeid = net.ReadUInt( 8 )      -- read the prepended type ID that was written automatically by net.WriteType(*)
-	local value  = net.ReadType( typeid ) -- read the data using the corresponding type ID
-	local client = net.ReadBool() -- whether this variable is client-specific
 
+local function store( entid, key, value, client )
 	if client then
 		netwrapper.StoreClientVar( entid, key, value )
 	else
 		netwrapper.StoreNetVar( entid, key, value )
+	end
+end
+
+net.Receive( "NetWrapperVar", function( len )
+	local entid  = net.ReadUInt( 16 )
+	local key    = net.ReadString()
+	local typeid = net.ReadUInt( 8 )      -- read the prepended type ID that was written automatically by net.WriteType(*)
+
+	local value, ventid
+	if typeid == TYPE_ENTITY then
+		ventid = net.ReadUInt( 16 )
+		if ventid then
+			value = Entity(ventid)
+		end
+	else
+		value = net.ReadType( typeid ) -- read the data using the corresponding type ID
+	end
+
+	local client = net.ReadBool() -- whether this variable is client-specific
+
+	if value == NULL then
+		local hkName = "NetWrapper_EntVar_"..entid.."_"..key
+		hook.Add( "OnEntityCreated", hkName, function( ent )
+			if ent:EntIndex() == ventid then
+				hook.Remove( "OnEntityCreated", hkName )
+				store( entid, key, ent, client )
+			end
+		end)
+	else
+		store( entid, key, value, client )
 	end
 end )
 
