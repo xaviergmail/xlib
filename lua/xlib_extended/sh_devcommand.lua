@@ -3,7 +3,7 @@ local unpack = (unpack or table.unpack)
 local function concat(...)
 	local s = ""
 	local t = {...}
-	for k, v in pairs(t) do
+	for k, v in ipairs(t) do
 		s = s .. " " .. tostring(v)
 	end
 
@@ -22,8 +22,8 @@ function longprint(...)
 
 	local len = #s
 	local incr = 1024
-	for i=1, len, 1000 do
-		MsgC(color_white, s:sub(i, len))
+	for i=1, len, incr do
+		MsgC(color_white, s:sub(i, i+incr-1))
 	end
 
 	Msg("\n")
