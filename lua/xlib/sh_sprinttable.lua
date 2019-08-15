@@ -14,7 +14,7 @@ end
 local buffer = ""
 function SPrintTable(t, indent, done, recurse)
 	if recurse == nil then
-		recurse = true	
+		recurse = true
 	end
 
 	if isbool(indent) then

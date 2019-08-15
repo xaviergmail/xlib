@@ -1,7 +1,7 @@
 NetWrapper
 ==========
 
-The NetWrapper library is a simple wrapper over Garry's standard net library to provide lightweight 
+The NetWrapper library is a simple wrapper over Garry's standard net library to provide lightweight
 networking without needing to care about the type of data you are networking (unlike the ENTITY:SetNetworked* library)
 and without needing to create dozens of networked strings for net messages.
 
@@ -16,10 +16,10 @@ If you are looking to replace your existing scripts' use of the ENTITY:SetNW*/EN
 are the way to go.
 
 With Net Vars, data set on entities is only networked when the data is added or changed with
-ENTITY:SetNetVar( key, value ) from the server. By broadcasting net messages only when 
+ENTITY:SetNetVar( key, value ) from the server. By broadcasting net messages only when
 the data changes, this library has a relatively low impact on network traffic.
 
-Once these values have been broadcasted, all connected clients will be able to retrieve the values like you 
+Once these values have been broadcasted, all connected clients will be able to retrieve the values like you
 would with the standard networking libraries.
 
 * Setting networked values:
@@ -35,7 +35,7 @@ ENTITY:SetNetVar( key, value )
 -- if run on the client, this will attempt to grab the value stored at the key
 ENTITY:GetNetVar( key, default )
 ```
-	
+
 Where 'default' is the default value you would like returned if the key doesn't exist.
 If a default value isn't provided and the key doesn't exist, nil will be returned.
 
@@ -56,10 +56,10 @@ If you wanted to show the player's title in a GM:PostPlayerDraw hook, you could 
 hook.Add( "PostPlayerDraw", "ShowPlayerTitle", function( ply )
     -- retrieve the player's title if one has been networked, otherwise returns nil
     -- if a title hasn't been networked yet, don't try drawing it
-    
+
     local title = ply:GetNetVar( "Title" )
-    if ( not title ) then return end 
-    
+    if ( not title ) then return end
+
     draw.SimpleText( title, ...  -- etc
 
 end )
@@ -67,7 +67,7 @@ end )
 
 ## Net Requests
 Net Requests are a new feature in the NetWrapper library. They allow you to determine exactly when a client asks the server
-for a value to be networked to them by using ENTITY:SendNetRequest( key ). 
+for a value to be networked to them by using ENTITY:SendNetRequest( key ).
 
 If the server has set data on the entity with ENTITY:SetNetRequest( key, value ), the value will be sent back to the client
 when they request it. If the server has not set any data on the entity at the given key, the client will keep sending requests
@@ -84,7 +84,7 @@ to the client only when they ask for it (such as when they look directly at it).
 ```lua
 ENTITY:SetNetRequest( key, value ) -- if run on the server, this key/value pair will be stored in a serverside table that the client can request from
 ```
-	
+
 * Getting net requests:
 
 ```lua
@@ -94,10 +94,10 @@ ENTITY:GetNetRequest( key, default ) -- once the client has received the value f
 
 Where 'default' is the default value you would like returned if the key doesn't exist.
 If a default value isn't provided and the key doesn't exist, nil will be returned.
-	
+
 ### Example:
 
-If you want to network the owner's name on props but don't want to flood connecting clients with hundreds of possible net messages, 
+If you want to network the owner's name on props but don't want to flood connecting clients with hundreds of possible net messages,
 you can do something like the following:
 ```lua
 -- some serverside function that pairs up the player with the entity they spawned
@@ -140,7 +140,7 @@ PLAYER:GetClientVar( key, default )
 netwrapper.GetClientVar( key, default ) = LocalPlayer():GetClientVar( key, default )
 
 ```
-    
+
 Where 'default' is the default value you would like returned if the key doesn't exist.
 If a default value isn't provided and the key doesn't exist, nil will be returned.
 
@@ -159,8 +159,8 @@ If you wanted to show the player's money in a GM:HUDPaint hook, you could do som
 ```lua
 hook.Add( "HUDPaint", "ShowPlayerMoney", function( )
     local money = netwrapper.GetClientVar( "Money" )
-    if ( not money ) then return end 
-    
+    if ( not money ) then return end
+
     draw.SimpleText( tostring( money ), ...  -- etc
 end )
 ```
@@ -185,15 +185,15 @@ netwrapper.SetGlobalVar( key, value )
 netwrapper.GetGlobalVar( key, value, default )
 
 ```
-    
+
 Where 'default' is the default value you would like returned if the key doesn't exist.
 If a default value isn't provided and the key doesn't exist, nil will be returned.
 
 
 
 ## Net Hooks
-NetWrapper also exposes a hook functionality. 
-This allows you to have callback function be called whenever data changes whether it be Net Vars, Client Vars or Global Vars. 
+NetWrapper also exposes a hook functionality.
+This allows you to have callback function be called whenever data changes whether it be Net Vars, Client Vars or Global Vars.
 **Net Requests are currently unsupported.**
 
 Hooks require you to specify
@@ -266,7 +266,7 @@ netwrapper.DefinePersistentVar( key )
 -- the associated key when a player disconnects.
 
 -- Note that this does NOT erase values of previously disconnected / pending players.
-netwrapper.UndefinePersistenceVar( key ) 
+netwrapper.UndefinePersistenceVar( key )
 ```
 
 ### Example:
@@ -287,7 +287,7 @@ print( ply:GetNetVar( "Happiness" ) )
 QUESTIONS & ANSWERS
 -------------------
 
-### Q: What sort of data can I network with this library? 
+### Q: What sort of data can I network with this library?
 
 A: Since this is a wrapper library over the standard net library, all limitations of the net library apply here.
 For example, you can't network functions or user data.
@@ -303,18 +303,18 @@ What you CAN network:
 * angles
 
 ---------------------------------------------------------------------------------------------------------------------------
-### Q: How often is the data networked? 
+### Q: How often is the data networked?
 
-A: 
+A:
 ##### For Net Vars, Client Vars and Global Vars:
 Every time you use ENTITY:SetNetVar( key, value ) from the server, the data will be networked to any clients via net message.
 
 If you set a value on a player and then change that value 5 minutes later, the data will have been broadcasted only 2 times
 over the span of that 5 minutes.
 
-However, this does mean that if you use ENTITY:SetNetVar( key value ) in a think hook, it will be broadcasting net messages every frame. 
+However, this does mean that if you use ENTITY:SetNetVar( key value ) in a think hook, it will be broadcasting net messages every frame.
 
-As with any other function, be sure to set networked data only as often as you need to. Think hooks should typically be 
+As with any other function, be sure to set networked data only as often as you need to. Think hooks should typically be
 avoided if you plan on networking large amounts of data on a large amount of entities/players.
 
 ##### For Net Requests:
@@ -322,9 +322,9 @@ Whereas Net Vars are automatically broadcasted to connected clients, and synced 
 on a 'need-to-know' basis, which significantly reduces the amount of network traffic that connecting players receive.
 
 ---------------------------------------------------------------------------------------------------------------------------
-### Q: What happens when clients connect after the data has already been broadcasted? 
+### Q: What happens when clients connect after the data has already been broadcasted?
 
-A: 
+A:
 ##### For Net Vars:
 When a client fully initializes on the server (during the GM:InitPostEntity hook, clientside), they will send a net message to
 the server that requests any data that is currently being networked on any entities.
@@ -336,9 +336,9 @@ Net Requests are not networked to the client unless they specifically ask the se
 use ENTITY:SendNetRequest( key ) to network the value.
 
 ---------------------------------------------------------------------------------------------------------------------------
-### Q: What happens to the networked data on a player that disconnected, or an entity that was removed? 
+### Q: What happens to the networked data on a player that disconnected, or an entity that was removed?
 
-A: When a player disconnects or an entity is removed, the netwrapper library will automatically sanitize its tables by 
+A: When a player disconnects or an entity is removed, the netwrapper library will automatically sanitize its tables by
 using the GM:EntityRemoved hook on the server and removing any [non-persistent](#persistence) data it currently has networked with that entity. The server will then send a net message to the client informing them to sanitize their clientside tables.
 
 [Persistent](#persistence) values will be restored when a player reconnects.

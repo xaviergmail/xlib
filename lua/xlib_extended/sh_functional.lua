@@ -15,17 +15,17 @@ end
 
 f.toString = function (v)
 	local type = type (v)
-	
+
 	if type == "string" then
 		return string.format ("%q", v)
 	elseif type == "table" then
 		if getmetatable (v) == f.mt.list then
 			return tostring (v)
 		end
-		
+
 		return "{ " .. tostring (v) .. " }"
 	end
-	
+
 	-- Default to tostring
 	return tostring (v)
 end
@@ -95,14 +95,14 @@ f.mt.list = f.mt.list or {}
 
 f.list = function (t)
 	t = t or {}
-	
+
 	local list = { array }
 	setmetatable (list, f.mt.list)
-	
+
 	for i = 1, #t do
 		list [i] = t [i]
 	end
-	
+
 	return list
 end
 
@@ -115,7 +115,7 @@ f.mt.list.methods.clone = function (self)
 	for k, v in pairs(self) do
 		t [k] = v
 	end
-	
+
 	return f.list (t)
 end
 
@@ -130,13 +130,13 @@ f.mt.list.methods.concat = f.concat
 f.mt.list.methods.sort = function (self, comparator)
 	local t = self:clone ()
 	table.sort (t)
-	
+
 	return t
 end
 
 f.mt.list.methods.tostring = function (self)
 	if #self == 0 then return "{}" end
-	
+
 	return "{ " .. self:map (f.toString):concat (", ") .. " }"
 end
 

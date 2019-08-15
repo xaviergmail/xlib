@@ -1,14 +1,14 @@
 --[[--------------------------------------------------------------------------
 	File name:
 		cl_netwrapper.lua
-	
+
 	Authors:
 		Mista-Tea ([IJWTB] Thomas)
 		xaviergmail (Xavier Bergeron)
-	
+
 	License:
 		The MIT License (copy/modify/distribute freely!)
-		
+
 	Changelog:
 		- March 9th,   2014:    Created
 		- April 5th,   2014:    Added to GitHub
@@ -17,7 +17,7 @@
 ----------------------------------------------------------------------------]]
 
 --[[--------------------------------------------------------------------------
---		Namespace Tables 
+--		Namespace Tables
 --------------------------------------------------------------------------]]--
 
 netwrapper          = netwrapper          or {}
@@ -114,7 +114,7 @@ end )
 --]]--
 hook.Add( "OnEntityCreated", "NetWrapperSync", function( ent )
 	local id = ent:EntIndex()
-	
+
 	for key, value in pairs( netwrapper.GetNetVars( id ) ) do
 		ent:SetNetVar( key, value, true )
 	end
@@ -151,7 +151,7 @@ end
 --	 variable, unlike with netwrapper NetVars which are automatically networked when a client connects to
 --	 the server or the value is broadcasted to all connected clients.
 --
---	You can think of Net Requests as a 'need-to-know' networking scheme, where the client only 
+--	You can think of Net Requests as a 'need-to-know' networking scheme, where the client only
 --	 asks for the networked variable when they need it (i.e., when you use this function).
 --
 --	Two cvars can help limit this function's potential for networking spamming:
@@ -166,26 +166,26 @@ end
 --	 of allowed requests before the client ultimately stops sending requests for the value altogether. The default is -1 (unlimited retries).
 --]]--
 function netwrapper.SendNetRequest( id, key )
-	
+
 	local requests = netwrapper.requests
 
 	if ( !requests[ id ] )                  then requests[ id ] = {} end
 	if ( !requests[ id ][ "NumRequests" ] ) then requests[ id ][ "NumRequests" ] = 0 end
 	if ( !requests[ id ][ "NextRequest" ] ) then requests[ id ][ "NextRequest" ] = CurTime() end
-	
+
 	local maxRetries = netwrapper.MaxRequests:GetInt()
-	
+
 	-- if the client tries to send another request when they have already hit the maximum number of requests, just ignore it
 	if ( maxRetries >= 0 and requests[ id ][ "NumRequests" ] >= maxRetries ) then return end
-	
+
 	-- if the client tries to send another request before the netwrapper_request_delay time has passed, just ignore it
 	if ( requests[ id ][ "NextRequest" ] > CurTime() ) then return end
-	
+
 	net.Start( "NetWrapperRequest" )
 		net.WriteUInt( id, 16 )
 		net.WriteString( key )
 	net.SendToServer()
-	
+
 	requests[ id ][ "NextRequest" ] = CurTime() + netwrapper.Delay:GetInt()
 	requests[ id ][ "NumRequests" ] = requests[ id ][ "NumRequests" ] + 1
 end
@@ -194,8 +194,8 @@ end
 --
 --	Net - NetWrapperRequest
 --
---	Received from the server when a value request has been answered. This 
---	 will only occur when the client has send a value request and the server 
+--	Received from the server when a value request has been answered. This
+--	 will only occur when the client has send a value request and the server
 --	 actually has a value stored at the given key.
 --]]--
 net.Receive( "NetWrapperRequest", function( bits )
@@ -203,7 +203,7 @@ net.Receive( "NetWrapperRequest", function( bits )
 	local key    = net.ReadString()
 	local typeid = net.ReadUInt( 8 )
 	local value  = net.ReadType( typeid )
-	
+
 	Entity( id ):SetNetRequest( key, value )
 end )
 

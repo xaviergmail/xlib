@@ -84,7 +84,7 @@ end
 
 function MAP:Add(dir)
 	if not self.Directories[dir] then
-		self:Load(dir)		
+		self:Load(dir)
 	end
 	self.Directories[dir] = true
 end
@@ -102,7 +102,7 @@ function MAP:Load(dir)
 
 	local function tryClient(name)
 		if file.Exists(dirbase..name, "LUA") then
-			if SERVER then	
+			if SERVER then
 				AddCSLuaFile(dirbase..name)
 			else
 				_include(dirbase..name)

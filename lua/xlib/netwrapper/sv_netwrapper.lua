@@ -1,14 +1,14 @@
 --[[--------------------------------------------------------------------------
 	File name:
 		sv_netwrapper.lua
-	
+
 	Authors:
 		Mista-Tea ([IJWTB] Thomas)
 		xaviergmail (Xavier Bergeron)
-	
+
 	License:
 		The MIT License (copy/modify/distribute freely!)
-			
+
 	Changelog:
 		- March 9th,   2014:    Created
 		- April 5th,   2014:    Added to GitHub
@@ -69,29 +69,29 @@ end )
 --	Loops through every entity currently networked and sends the networked
 --	 data to the client. This will also network any persistent ClientVars.
 --
---	While looping, any values that are NULL (disconnected players, removed entities) 
+--	While looping, any values that are NULL (disconnected players, removed entities)
 --	 will automatically be removed from the table and not synced to the client.
 --]]--
 function netwrapper.SyncClient( ply )
-	for id, values in pairs( netwrapper.ents ) do			
+	for id, values in pairs( netwrapper.ents ) do
 		for key, value in pairs( values ) do
-			if ( IsEntity( value ) and !value:IsValid() ) then 
-				netwrapper.ents[ id ][ key ] = nil 
-				continue; 
+			if ( IsEntity( value ) and !value:IsValid() ) then
+				netwrapper.ents[ id ][ key ] = nil
+				continue;
 			end
-			
+
 			netwrapper.SendNetVar( ply, id, key, value )
-		end			
+		end
 	end
 
 	for key, value in pairs( netwrapper.GetClientVars( ply:EntIndex() ) ) do
-		if ( IsEntity( value ) and !value:IsValid() ) then 
-			netwrapper.clients[ ply:EntIndex() ][ key ] = nil 
-			continue; 
+		if ( IsEntity( value ) and !value:IsValid() ) then
+			netwrapper.clients[ ply:EntIndex() ][ key ] = nil
+			continue;
 		end
-		
+
 		netwrapper.SendNetVar( ply, ply:EntIndex(), key, value, true )
-	end	
+	end
 end
 
 --[[--------------------------------------------------------------------------
@@ -155,7 +155,7 @@ net.Receive( "NetWrapperRequest", function( bits, ply )
 	local id  = net.ReadUInt( 16 )
 	local ent = Entity( id )
 	local key = net.ReadString()
-	
+
 	if ( ent:GetNetRequest( key ) ~= nil ) then
 		netwrapper.SendNetRequest( ply, id, key, ent:GetNetRequest( key ) )
 	end
@@ -189,7 +189,7 @@ end
 --  NOTE: This persistence is only for the current game session and should only be used
 --   for VOLATILE data. An example use would be to store a player's score for the current
 --   round. NetWrapper will handle restoring this data for you if a player reconnects.
---  
+--
 --  ** Any level change or server restart will wipe this stored data. **
 --]]--
 function netwrapper.DefinePersistentVar( key )
@@ -227,17 +227,17 @@ function netwrapper.FilterPersistentVars( tbl )
 end
 
 --[[--------------------------------------------------------------------------
--- 
+--
 -- 	Hook - EntityRemoved( entity )
--- 
+--
 -- 	Called when an entity has been removed. This will automatically remove the
 -- 	 data at the entity's index if any was being networked. This will prevent
 -- 	 data corruption where a future entity may be using the data from a previous
 --	 entity that used the same EntIndex
 --
 --  If the entity being removed is a player (upon disconnecting), the player's
---   NetVars / NetRequests that have been marked for persistence using 
---   netwrapper.DefinePersistentVar will be stored (saved by Steam ID) 
+--   NetVars / NetRequests that have been marked for persistence using
+--   netwrapper.DefinePersistentVar will be stored (saved by Steam ID)
 --   for re-assignment in case the player reconnects.
 --]]--
 hook.Add( "EntityRemoved", "NetWrapperClear", function( ent )
@@ -254,11 +254,11 @@ hook.Add( "EntityRemoved", "NetWrapperClear", function( ent )
 end )
 
 --[[--------------------------------------------------------------------------
--- 
+--
 -- 	Hook - EntityRemoved( entity )
--- 
+--
 -- 	Called when an entity has been created. This will automatically restore any
---   NetVars / NetRequests on players whose keys were saved by 
+--   NetVars / NetRequests on players whose keys were saved by
 --   netwrapper.DefinePersistentVar when the player disconnected.
 --]]--
 hook.Add( "OnEntityCreated", "NetWrapperRestore", function ( ent )

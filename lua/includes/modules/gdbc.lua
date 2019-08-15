@@ -42,7 +42,7 @@ local function log(identifier, ...)
 	local args = {...}
 
 	local str = ("[%s] %s\n\n"):format(identifier, concat(args, ", "))
-	
+
 	print(str)
 	file.Append("query_log.txt", str)
 end
@@ -589,7 +589,7 @@ hook.Add("Initialize", "InitSchemas", function()
 	hook.Add("Think", "GDBC:PollMigrations", function()
 		for k, v in pairs(DB.__schemas) do
 			if not v.MIGRATIONS_COMPLETED then return end
-		end		
+		end
 
 		if changedHibernate and hibernate:GetInt() == changedTo then
 			RunConsoleCommand(hibernate:GetName(), origHibernate)
@@ -620,7 +620,7 @@ function make_config_table()
                  `configName`='db_version'
         ]];
 
-        updateDatabaseVersion = 
+        updateDatabaseVersion =
         [[
         	REPLACE INTO `__T__`
             (configName, configInt)
@@ -732,7 +732,7 @@ function perform_migrations(db)
 	            	log("Migration query successful: ", id)
 	                return "updateDatabaseVersion", id
 	            end)
-	            
+
 	        :query "updateDatabaseVersion" (db.config.updateDatabaseVersion)
 		        :success(on_migration_completed)
 

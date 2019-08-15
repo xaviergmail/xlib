@@ -777,7 +777,7 @@ end
 -- @param err The normalised error string (no filepath included)
 -- @param stack The Lua stacktrace for the error
 -- @param extra Any additional context for the error
--- @param[opt] ply Player object of the client the error occurred on 
+-- @param[opt] ply Player object of the client the error occurred on
 -- @return The generated event ID
 local function proccessException(err, stack, extra, ply)
 	if (not extra) then

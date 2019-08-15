@@ -1,14 +1,14 @@
 --[[--------------------------------------------------------------------------
 	File name:
 		sh_netwrapper.lua
-	
+
 	Authors:
 		Mista-Tea ([IJWTB] Thomas)
 		xaviergmail (Xavier Bergeron)
-	
+
 	License:
 		The MIT License (copy/modify/distribute freely!)
-		
+
 	Changelog:
 		- March 9th,   2014:    Created
 		- April 5th,   2014:    Added to GitHub
@@ -19,7 +19,7 @@
 AddCSLuaFile()
 
 --[[--------------------------------------------------------------------------
---	Namespace Tables 
+--	Namespace Tables
 --------------------------------------------------------------------------]]--
 
 netwrapper          = netwrapper          or {}
@@ -41,7 +41,7 @@ local PLAYER = FindMetaTable( "Player" )
 -- For example, if you want prop owners to NOT be networked outright (i.e., with ent:SetNetVar())
 -- and instead have the client only ask the server for the owner of the prop they are currently
 -- looking at, this convar determines the amount of time that must pass before they
--- can send another request for the prop owner. 
+-- can send another request for the prop owner.
 --
 -- This is solely to prevent net message spamming until the value has successfully been sent to the client
 -- There should be no reason it should take more than at most a few seconds for the value to be sent to the client.
@@ -80,10 +80,10 @@ netwrapper.MaxRequests = CreateConVar( "netwrapper_max_requests",  -1, bit.bor( 
 --	ENTITY:SetNetVar( string, *, boolean [optional] )
 --
 --	Stores the key/value pair of the entity into a table so that we can
---	 retrieve them with ENTITY:GetNetVar( key ), and to network the data with any 
+--	 retrieve them with ENTITY:GetNetVar( key ), and to network the data with any
 --	 clients that connect after the data has initially been networked.
 --
---	Value types can be anything supported by the net library, 
+--	Value types can be anything supported by the net library,
 --	 e.g., string, number, table, angle, vector, boolean, entity
 --
 --	Setting a new value on the entity using the same key will replace the original value.
@@ -101,7 +101,7 @@ function ENTITY:SetNetVar( key, value, force )
 
 	netwrapper.StoreNetVar( self:EntIndex(), key, value )
 
-	if ( SERVER ) then 
+	if ( SERVER ) then
 		netwrapper.BroadcastNetVar( self:EntIndex(), key, value )
 	end
 end
@@ -146,7 +146,7 @@ end
 --	netwrapper.StoreNetVar( int, string, * )
 --
 --	Stores the key/value pair of the entity into a table so that we can
---	 retrieve them with ENTITY:GetNetVar( key ), and to network the data with any 
+--	 retrieve them with ENTITY:GetNetVar( key ), and to network the data with any
 --	 clients that connect after the data has initially been networked.
 --]]--
 function netwrapper.StoreNetVar( id, key, value )
@@ -163,7 +163,7 @@ end
 --
 --	netwrapper.GetNetVars( id )
 --
---	Retrieves any networked data on the given entity index, or an empty table if 
+--	Retrieves any networked data on the given entity index, or an empty table if
 --	 nothing has been networked on the entity yet.
 --]]--
 function netwrapper.GetNetVars( id )
@@ -234,7 +234,7 @@ end
 
 --[[--------------------------------------------------------------------------
 --	CLIENT VARS
---  Functionally identical to NetVars, but for players only, with the 
+--  Functionally identical to NetVars, but for players only, with the
 --	 difference being that ClientVars are only networked to their respective
 --   client instead of everyone.
 --  Example usage would be to network a player's health, money, inventory, etc.
@@ -253,7 +253,7 @@ function PLAYER:SetClientVar( key, value, force )
 
 	netwrapper.StoreClientVar( self:EntIndex(), key, value )
 
-	if ( SERVER ) then 
+	if ( SERVER ) then
 		netwrapper.SendNetVar( self, self:EntIndex(), key, value, true )
 	end
 end
@@ -342,7 +342,7 @@ end
 --
 --	netwrapper.GetClientVars( id )
 --
---	Retrieves any client-specific networked data on the given entity index, 
+--	Retrieves any client-specific networked data on the given entity index,
 --   or an empty table if nothing has been networked on the player yet.
 --]]--
 function netwrapper.GetClientVars( id )
@@ -350,7 +350,7 @@ function netwrapper.GetClientVars( id )
 end
 
 --[[--------------------------------------------------------------------------
---	GLOBAL NET VARS 
+--	GLOBAL NET VARS
 --  Wrapper around netvar functions applied on the game.GetWorld() entity
 --------------------------------------------------------------------------]]--
 
@@ -413,7 +413,7 @@ end
 --	 possibly overflowing the client with networked vars from SetNetVar when they join, you can
 --	 specify exactly when the client needs retrieve the value from the server.
 --
---	Value types can be anything supported by the net library, 
+--	Value types can be anything supported by the net library,
 --	 e.g., string, number, table, angle, vector, boolean, entity
 --
 --	Setting a new value on the entity using the same key will replace the original value.
@@ -456,7 +456,7 @@ end
 --
 --	netwrapper.GetNetRequests( number )
 --
---	Retrieves any stored requested data on the given entity, or an empty table if 
+--	Retrieves any stored requested data on the given entity, or an empty table if
 --	 nothing has been stored on the entity yet.
 --]]--
 function netwrapper.GetNetRequests( id )

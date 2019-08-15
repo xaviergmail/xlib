@@ -106,7 +106,7 @@ schema "darkrp"
             WHERE players.steamid=?
         ]];
     };
-  
+
     migration (1)
         [[
             -- -----------------------------------------------------
@@ -140,7 +140,7 @@ schema "darkrp"
         ]];
 
     migration (2)
-        [[  
+        [[
             -- -----------------------------------------------------
             -- Steam updated their maximum display name length.
             -- Update `csidarkrp`.`player_info`.`name` accordingly.
@@ -173,8 +173,8 @@ function CSIDB:InitPlayer(ply)
             end)
 
         -- Add a named query to the chain
-        -- You can pass arguments to the query object if they are knonwn in advance 
-        :query "insert" (DB.darkrp.players.insert(steamid)) 
+        -- You can pass arguments to the query object if they are knonwn in advance
+        :query "insert" (DB.darkrp.players.insert(steamid))
             :empty(function(q, last_insert)
                 return "on_id", last_insert
             end)
@@ -292,8 +292,8 @@ To enable, simply add and customize the following to your `GarrysMod/garrysmod/C
 sentry
 {
     dsn "https://dsn_example@sentry.io/dsn_example"
-    // auto "false" 
-    
+    // auto "false"
+
     // The following are all optional, this is passed directly to sentry.Setup
     options {
         server_name "Sandbox-1"

@@ -5,7 +5,7 @@ function net.WriteCompressed(str)
 	if not compressed or not len then
 		compressed, len = "", 0
 	end
-	
+
 	net.WriteUInt(len, 32)
 	net.WriteData(compressed, len)
 end
