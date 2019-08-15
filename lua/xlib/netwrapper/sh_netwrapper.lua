@@ -289,6 +289,13 @@ netwrapper.CLNetHookPrefix = "ClientVar_"
 --]]--
 function PLAYER:AddCLNetHook( key, name, fn )
 	netwrapper.StoreNetHook( self:EntIndex(), netwrapper.CLNetHookPrefix .. key, name, fn )
+
+	-- Fix race condition. You can only add a hook clientside once LocalPlayer() exists, but the hook would get run _during_ the LocalPlayer() creation.
+	if CLIENT then
+		if self:GetClientVar(key) then
+			fn(self, key, self:GetClientVar(key))
+		end
+	end
 end
 
 --[[--------------------------------------------------------------------------
