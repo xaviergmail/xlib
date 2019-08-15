@@ -418,7 +418,7 @@ local schema_mt =
 	end;
 }
 
-local migration_mt = {}
+local migration_mt = { mtID = "migration" }
 
 local make_config_table, make_config_migration, perform_migrations
 local table_insert = table.insert
@@ -432,7 +432,7 @@ local function schema(name)
 			if IsMySQLOODB(v) then
 				_schema.database = v
 			elseif v then
-				if getmetatable(v) == migration_mt then
+				if getmetatable(v) and getmetatable(v).mtID == migration_mt.mtID then
 					_schema.migrations[v.id] = v.query
 				else
 					_schema[v[1]] = v[2]
