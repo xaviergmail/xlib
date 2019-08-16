@@ -45,7 +45,7 @@ local function iterDir(dir, _include)
 			if realms[realm] then
 				table.insert(realms[realm], dir..'/'..f)
 			end
-					
+
 		end
 	end
 
