@@ -490,6 +490,7 @@ end
 function netwrapper.ClearData( id )
 	netwrapper.ents[ id ]     = nil
 	netwrapper.requests[ id ] = nil
+	netwrapper.clients[ id ]  = nil
 
 	if ( SERVER ) then
 		net.Start( "NetWrapperClear" )
