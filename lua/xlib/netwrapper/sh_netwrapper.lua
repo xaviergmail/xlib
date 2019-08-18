@@ -251,6 +251,8 @@ function PLAYER:SetClientVar( key, value, force )
 
 	if ( netwrapper.GetClientVars( self:EntIndex() )[ key ] == value and not force ) then return end
 
+	self.ClientVars = self.ClientVars or {}
+	self.ClientVars[key] = value
 	netwrapper.StoreClientVar( self:EntIndex(), key, value )
 
 	if ( SERVER ) then
@@ -271,6 +273,14 @@ end
 --	 OR nil if no default was provided and this key hasn't been set.
 --]]--
 function PLAYER:GetClientVar( key, default )
+	if not self.ClientVars then
+		self.ClientVars = {}
+	end
+
+	if self.ClientVars[key] ~= nil then
+		return self.ClientVars[key]
+	end
+
 	local values = netwrapper.GetClientVars( self:EntIndex() )
 	if ( values[ key ] ~= nil ) then return values[ key ] else return default end
 end
@@ -490,6 +500,7 @@ end
 function netwrapper.ClearData( id )
 	netwrapper.ents[ id ]     = nil
 	netwrapper.requests[ id ] = nil
+	netwrapper.clients[ id ]  = nil
 
 	if ( SERVER ) then
 		net.Start( "NetWrapperClear" )

@@ -22,6 +22,7 @@
 
 netwrapper                 = netwrapper                 or {}
 netwrapper.ents            = netwrapper.ents            or {}
+netwrapper.clients         = netwrapper.clients         or {}
 netwrapper.requests        = netwrapper.requests        or {}
 netwrapper.persistentvars  = netwrapper.persistentvars  or {}
 netwrapper.plypersistence  = netwrapper.plypersistence  or {}
