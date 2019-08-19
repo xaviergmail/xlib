@@ -102,6 +102,53 @@ else
 	end)
 end
 
+
+local mt = {}
+mt.__index = function(t, k)
+	local build = {}
+	local items = rawget(t, 'items')
+
+	local fn = false
+	for id, item in pairs(items) do
+		local v = item[k]
+		if isfunction(v) then
+			fn = true
+		else
+			build[id] = v
+		end
+	end
+
+	if fn then
+		return function(this, ...)
+			local isSelf = this == t
+			for id, item in pairs(items) do
+				local ret
+				if isSelf then
+					ret = item[k](item, ...)
+				else
+					ret = item[k](...)
+				end
+				build[id] = ret
+			end
+
+			return build
+		end
+	else
+		return build
+	end
+end
+
+mt.__newindex = function(t, k, v)
+	local items = rawget(t, "items")
+	for id, item in pairs(items) do
+		item[k] = v
+	end
+end
+
+function all(tbl)
+	return setmetatable({items=tbl}, mt)
+end
+
 DevCommand("lua", luacmd)
 DevCommand("luacl", luacmd, CLIENT)
 

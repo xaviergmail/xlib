@@ -63,7 +63,7 @@ local function store( entid, key, value, client )
 end
 
 net.Receive( "NetWrapperVar", function( len )
-	local entid  = net.ReadUInt( 16 )
+	local entid  = net.ReadUInt( 32 )
 	local key    = net.ReadString()
 	local typeid = net.ReadUInt( 8 )      -- read the prepended type ID that was written automatically by net.WriteType(*)
 
@@ -71,7 +71,7 @@ net.Receive( "NetWrapperVar", function( len )
 	if typeid == TYPE_ENTITY then
 		ventid = net.ReadUInt( 16 )
 		if ventid then
-			value = Entity(ventid)
+			value = netwrapper.Entity(ventid)
 		end
 	else
 		value = net.ReadType( typeid ) -- read the data using the corresponding type ID
@@ -82,7 +82,7 @@ net.Receive( "NetWrapperVar", function( len )
 	if value == NULL then
 		local hkName = "NetWrapper_EntVar_"..entid.."_"..key
 		hook.Add( "OnEntityCreated", hkName, function( ent )
-			if ent:EntIndex() == ventid then
+			if ent:NWIndex() == ventid then
 				hook.Remove( "OnEntityCreated", hkName )
 				store( entid, key, ent, client )
 			end
@@ -109,11 +109,11 @@ end )
 --	Hook - OnEntityCreated
 --
 --	This hook is called every time an entity is created. This will automatically
---	 assign any networked values that are associated with the entity's EntIndex.
+--	 assign any networked values that are associated with the entity's NWIndex.
 --	 This saves us the trouble of polling the server to retrieve the values.
 --]]--
 hook.Add( "OnEntityCreated", "NetWrapperSync", function( ent )
-	local id = ent:EntIndex()
+	local id = ent:NWIndex()
 
 	for key, value in pairs( netwrapper.GetNetVars( id ) ) do
 		ent:SetNetVar( key, value, true )
@@ -138,7 +138,7 @@ end )
 --
 --]]--
 function ENTITY:SendNetRequest( key )
-	netwrapper.SendNetRequest( self:EntIndex(), key )
+	netwrapper.SendNetRequest( self:NWIndex(), key )
 end
 
 --[[--------------------------------------------------------------------------
@@ -182,7 +182,7 @@ function netwrapper.SendNetRequest( id, key )
 	if ( requests[ id ][ "NextRequest" ] > CurTime() ) then return end
 
 	net.Start( "NetWrapperRequest" )
-		net.WriteUInt( id, 16 )
+		net.WriteUInt( id, 32 )
 		net.WriteString( key )
 	net.SendToServer()
 
@@ -199,12 +199,12 @@ end
 --	 actually has a value stored at the given key.
 --]]--
 net.Receive( "NetWrapperRequest", function( bits )
-	local id     = net.ReadUInt( 16 )
+	local id     = net.ReadUInt( 32 )
 	local key    = net.ReadString()
 	local typeid = net.ReadUInt( 8 )
 	local value  = net.ReadType( typeid )
 
-	Entity( id ):SetNetRequest( key, value )
+	netwrapper.Entity( id ):SetNetRequest( key, value )
 end )
 
 
@@ -218,7 +218,7 @@ end )
 --	 and become corrupted.
 --]]--
 net.Receive( "NetWrapperClear", function( bits )
-	local id = net.ReadUInt( 16 )
+	local id = net.ReadUInt( 32 )
 	netwrapper.ClearData( id )
 end )
 
