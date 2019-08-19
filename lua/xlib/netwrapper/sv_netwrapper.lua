@@ -85,13 +85,13 @@ function netwrapper.SyncClient( ply )
 		end
 	end
 
-	for key, value in pairs( netwrapper.GetClientVars( ply:EntIndex() ) ) do
+	for key, value in pairs( netwrapper.GetClientVars( ply:NWIndex() ) ) do
 		if ( IsEntity( value ) and !value:IsValid() ) then
-			netwrapper.clients[ ply:EntIndex() ][ key ] = nil
+			netwrapper.clients[ ply:NWIndex() ][ key ] = nil
 			continue;
 		end
 
-		netwrapper.SendNetVar( ply, ply:EntIndex(), key, value, true )
+		netwrapper.SendNetVar( ply, ply:NWIndex(), key, value, true )
 	end
 end
 
@@ -104,7 +104,7 @@ end
 --]]--
 function netwrapper.BroadcastNetVar( id, key, value )
 	net.Start( "NetWrapperVar" )
-		net.WriteUInt( id, 16 )
+		net.WriteUInt( id, 32 )
 		net.WriteString( key )
 		net.WriteType( value )
 		net.WriteBool( false )
@@ -120,7 +120,7 @@ end
 --]]--
 function netwrapper.SendNetVar( ply, id, key, value, clientvar )
 	net.Start( "NetWrapperVar" )
-		net.WriteUInt( id, 16 )
+		net.WriteUInt( id, 32 )
 		net.WriteString( key )
 		net.WriteType( value )
 		net.WriteBool( clientvar )
@@ -153,8 +153,8 @@ end
 --	 name from the server.
 --]]--
 net.Receive( "NetWrapperRequest", function( bits, ply )
-	local id  = net.ReadUInt( 16 )
-	local ent = Entity( id )
+	local id  = net.ReadUInt( 32 )
+	local ent = netwrapper.Entity( id )
 	local key = net.ReadString()
 
 	if ( ent:GetNetRequest( key ) ~= nil ) then
@@ -173,7 +173,7 @@ end )
 --]]--
 function netwrapper.SendNetRequest( ply, id, key, value )
 	net.Start( "NetWrapperRequest" )
-		net.WriteUInt( id, 16 )
+		net.WriteUInt( id, 32 )
 		net.WriteString( key )
 		net.WriteType( value )
 	net.Send( ply )
@@ -234,7 +234,7 @@ end
 -- 	Called when an entity has been removed. This will automatically remove the
 -- 	 data at the entity's index if any was being networked. This will prevent
 -- 	 data corruption where a future entity may be using the data from a previous
---	 entity that used the same EntIndex
+--	 entity that used the same NWIndex
 --
 --  If the entity being removed is a player (upon disconnecting), the player's
 --   NetVars / NetRequests that have been marked for persistence using
@@ -245,13 +245,13 @@ hook.Add( "EntityRemoved", "NetWrapperClear", function( ent )
 
 	if ( ent:IsPlayer() ) then
 		netwrapper.plypersistence[ ent:SteamID() ] = {
-			netwrapper.FilterPersistentVars( netwrapper.ents[ ent:EntIndex() ] ),
-			netwrapper.FilterPersistentVars( netwrapper.requests[ ent:EntIndex() ] ),
-			netwrapper.FilterPersistentVars( netwrapper.clients[ ent:EntIndex() ] ),
+			netwrapper.FilterPersistentVars( netwrapper.ents[ ent:NWIndex() ] ),
+			netwrapper.FilterPersistentVars( netwrapper.requests[ ent:NWIndex() ] ),
+			netwrapper.FilterPersistentVars( netwrapper.clients[ ent:NWIndex() ] ),
 		}
 	end
 
-	netwrapper.ClearData( ent:EntIndex() )
+	netwrapper.ClearData( ent:NWIndex() )
 end )
 
 --[[--------------------------------------------------------------------------
@@ -268,8 +268,8 @@ hook.Add( "OnEntityCreated", "NetWrapperRestore", function ( ent )
 	local stored = netwrapper.plypersistence[ ent:SteamID() ]
 
 	if ( stored ) then
-		netwrapper.ents[ ent:EntIndex() ]     = stored[ 1 ]
-		netwrapper.requests[ ent:EntIndex() ] = stored[ 2 ]
-		netwrapper.clients[ ent:EntIndex() ]  = stored[ 3 ]
+		netwrapper.ents[ ent:NWIndex() ]     = stored[ 1 ]
+		netwrapper.requests[ ent:NWIndex() ] = stored[ 2 ]
+		netwrapper.clients[ ent:NWIndex() ]  = stored[ 3 ]
 	end
 end )

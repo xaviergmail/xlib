@@ -67,6 +67,22 @@ netwrapper.Delay      = CreateConVar( "netwrapper_request_delay", 5, bit.bor( FC
 -- Value: >0 :: the client can send only the specified amount of requests
 netwrapper.MaxRequests = CreateConVar( "netwrapper_max_requests",  -1, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ), "The number of requests a client can send when an entity does not have a value stored at the requested key" )
 
+
+netwrapper.PIDOffset = 10000000
+_E.NWIndex = _E.EntIndex
+
+function _P:NWIndex()
+	return self:UserID() + netwrapper.PIDOffset
+end
+
+function netwrapper.Entity(id)
+	if id > netwrapper.PIDOffset then
+		return Player(id - netwrapper.PIDOffset)
+	else
+		return Entity(id)
+	end
+end
+
 --[[--------------------------------------------------------------------------
 --	Namespace Functions
 --------------------------------------------------------------------------]]--
@@ -97,12 +113,12 @@ netwrapper.MaxRequests = CreateConVar( "netwrapper_max_requests",  -1, bit.bor( 
 --]]--
 function ENTITY:SetNetVar( key, value, force )
 
-	if ( netwrapper.GetNetVars( self:EntIndex() )[ key ] == value and not force ) then return end
+	if ( netwrapper.GetNetVars( self:NWIndex() )[ key ] == value and not force ) then return end
 
-	netwrapper.StoreNetVar( self:EntIndex(), key, value )
+	netwrapper.StoreNetVar( self:NWIndex(), key, value )
 
 	if ( SERVER ) then
-		netwrapper.BroadcastNetVar( self:EntIndex(), key, value )
+		netwrapper.BroadcastNetVar( self:NWIndex(), key, value )
 	end
 end
 
@@ -116,7 +132,7 @@ end
 --	 OR nil if no default was provided and this key hasn't been set.
 --]]--
 function ENTITY:GetNetVar( key, default )
-	local values = netwrapper.GetNetVars( self:EntIndex() )
+	local values = netwrapper.GetNetVars( self:NWIndex() )
 	if ( values[ key ] ~= nil ) then return values[ key ] else return default end
 end
 
@@ -128,7 +144,7 @@ end
 --  Uniquely identified by name to be later removed by ENTITY:RemoveNetHook
 --]]--
 function ENTITY:AddNetHook( key, name, fn )
-	netwrapper.StoreNetHook( self:EntIndex(), key, name, fn )
+	netwrapper.StoreNetHook( self:NWIndex(), key, name, fn )
 end
 
 --[[--------------------------------------------------------------------------
@@ -138,7 +154,7 @@ end
 --	Removes the Net Hook on this entity referred to by NetVar key and hook Name
 --]]--
 function ENTITY:RemoveNetHook( key, name )
-	netwrapper.StoreNetHook( self:EntIndex(), key, name, nil )
+	netwrapper.StoreNetHook( self:NWIndex(), key, name, nil )
 end
 
 --[[--------------------------------------------------------------------------
@@ -225,8 +241,8 @@ function netwrapper.NetVarChanged( id, key, value, old, realid, clvar )
 			end
 			if id == 0 then
 				fn( key, value, old )
-			elseif IsValid( Entity( realid ) ) then
-				fn( Entity( realid ), key, value, old )
+			elseif IsValid( netwrapper.Entity( realid ) ) then
+				fn( netwrapper.Entity( realid ), key, value, old )
 			end
 		end
 	end
@@ -249,14 +265,12 @@ end
 --]]--
 function PLAYER:SetClientVar( key, value, force )
 
-	if ( netwrapper.GetClientVars( self:EntIndex() )[ key ] == value and not force ) then return end
+	if ( netwrapper.GetClientVars( self:NWIndex() )[ key ] == value and not force ) then return end
 
-	self.ClientVars = self.ClientVars or {}
-	self.ClientVars[key] = value
-	netwrapper.StoreClientVar( self:EntIndex(), key, value )
+	netwrapper.StoreClientVar( self:NWIndex(), key, value )
 
 	if ( SERVER ) then
-		netwrapper.SendNetVar( self, self:EntIndex(), key, value, true )
+		netwrapper.SendNetVar( self, self:NWIndex(), key, value, true )
 	end
 end
 
@@ -273,15 +287,7 @@ end
 --	 OR nil if no default was provided and this key hasn't been set.
 --]]--
 function PLAYER:GetClientVar( key, default )
-	if not self.ClientVars then
-		self.ClientVars = {}
-	end
-
-	if self.ClientVars[key] ~= nil then
-		return self.ClientVars[key]
-	end
-
-	local values = netwrapper.GetClientVars( self:EntIndex() )
+	local values = netwrapper.GetClientVars( self:NWIndex() )
 	if ( values[ key ] ~= nil ) then return values[ key ] else return default end
 end
 
@@ -298,7 +304,7 @@ netwrapper.CLNetHookPrefix = "ClientVar_"
 --  Uniquely identified by name to be later removed by ENTITY:RemoveCLNetHook
 --]]--
 function PLAYER:AddCLNetHook( key, name, fn )
-	netwrapper.StoreNetHook( self:EntIndex(), netwrapper.CLNetHookPrefix .. key, name, fn )
+	netwrapper.StoreNetHook( self:NWIndex(), netwrapper.CLNetHookPrefix .. key, name, fn )
 
 	-- Fix race condition. You can only add a hook clientside once LocalPlayer() exists, but the hook would get run _during_ the LocalPlayer() creation.
 	if CLIENT then
@@ -315,7 +321,7 @@ end
 --	Removes the Net Hook on this entity referred to by ClientVar key and hook Name
 --]]--
 function PLAYER:RemoveCLNetHook( key, name )
-	netwrapper.StoreNetHook( self:EntIndex(), netwrapper.CLNetHookPrefix .. key, name, nil )
+	netwrapper.StoreNetHook( self:NWIndex(), netwrapper.CLNetHookPrefix .. key, name, nil )
 end
 
 --[[--------------------------------------------------------------------------
@@ -431,7 +437,7 @@ end
 --	 unlike the ENTITY:SetNW* library.
 --]]--
 function ENTITY:SetNetRequest( key, value )
-	netwrapper.StoreNetRequest( self:EntIndex(), key, value )
+	netwrapper.StoreNetRequest( self:NWIndex(), key, value )
 end
 
 --[[--------------------------------------------------------------------------
@@ -444,7 +450,7 @@ end
 --	 OR nil if no default was provided and this key hasn't been set.
 --]]--
 function ENTITY:GetNetRequest( key, default )
-	local values = netwrapper.GetNetRequests( self:EntIndex() )
+	local values = netwrapper.GetNetRequests( self:NWIndex() )
 	if ( values[ key ] ~= nil ) then return values[ key ] else return default end
 end
 
@@ -501,10 +507,11 @@ function netwrapper.ClearData( id )
 	netwrapper.ents[ id ]     = nil
 	netwrapper.requests[ id ] = nil
 	netwrapper.clients[ id ]  = nil
+	netwrapper.hooks[ id ]    = nil
 
 	if ( SERVER ) then
 		net.Start( "NetWrapperClear" )
-			net.WriteUInt( id, 16 )
+			net.WriteUInt( id, 32 )
 		net.Broadcast()
 	end
 end
