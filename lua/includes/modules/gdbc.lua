@@ -629,7 +629,7 @@ function make_config_table()
 
         getString =
         [[
-			SELECT `configStr`
+			SELECT `configStr`, `configStr` as `value`
 			FROM `__T__`
 			WHERE
 				`configName`=?
@@ -667,7 +667,7 @@ function make_config_migration()
 		CREATE TABLE IF NOT EXISTS `config` (
 			`configName` VARCHAR(45) NOT NULL,
 			`configInt` INT NULL,
-			`configStr` VARCHAR(45) NULL,
+			`configStr` TEXT NULL,
 			PRIMARY KEY (`configName`))
 		ENGINE = InnoDB;
 
