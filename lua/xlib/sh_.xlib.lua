@@ -21,6 +21,21 @@ hook.Add("InitPostEntity", "XLIB.PostInitEntity", function()
 	XLIB.DidInitPostEntity = true
 end)
 
+if CLIENT then
+	function XLIB.EnsureLocalPlayer(fn)
+		if IsValid(LocalPlayer()) then
+			fn()
+		else
+			local hkName = "XLIB.EnsureLocalPlayer"..tostring(fn)
+			hook.Add("InitPostEntity", hkName, function()
+				hook.Remove("InitPostEntity", hkName)
+				fn()
+			end)
+		end
+	end
+end
+
+
 _R = debug.getregistry()
 _P = _R.Player
 _E = _R.Entity
