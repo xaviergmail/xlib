@@ -58,6 +58,7 @@ local xpcall = xpcall;
 local debug = debug
 local print = print;
 local PrintTable = PrintTable;
+local SPrintTable = SPrintTable;
 
 local g = _G;
 module("sentry");
@@ -675,6 +676,9 @@ local function buildPayload(err, stacktrace, extra, ply)
 		txn["user"] = ply
 		tags["Player"] = ply:SteamID()
 	end
+
+	txn["extra"] = txn["extra"] or {}
+	txn["extra"]["Stack"] = SPrintTable(stacktrace)
 
 	return {
 		event_id = UUID4(),
