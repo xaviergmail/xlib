@@ -1,3 +1,5 @@
+local table = table
+
 --- Functionally identical to print() but returns the string instead of printing it.
 -- The varargs passed are automatically tostring()'d and concatenated by a single space.
 function SPrint(...)
@@ -38,7 +40,7 @@ function SPrintTable(t, indent, done, recurse)
 		if  (recurse && istable(value) && !done[ value ]) then
 
 			done[ value ] = true
-			buffer = buffer..(tostring(key) .. ":" .. "\n")
+			buffer = buffer..(tostring(key) .. ":   (" .. tostring(value):gsub("^table: ", "") .. ")\n")
 			SPrintTable (value, indent + 2, done)
 
 		else
