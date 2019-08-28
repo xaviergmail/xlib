@@ -88,7 +88,8 @@ function DevCommand(cmd, fn, realm)
 	if realm ~= nil and not realm then return end
 
 	concommand.Add(cmd, function(ply, cmd, args, argstr)
-		if not IsValid(ply) or (ply.IsDeveloper and ply:IsDeveloper()) then
+		local override = hook.Run("CanRunDevCommand", ply, cmd, args, argstr) == true
+		if override or not IsValid(ply) or (ply.IsDeveloper and ply:IsDeveloper()) then
 			fn(ply, cmd, args, argstr)
 		end
 	end)
