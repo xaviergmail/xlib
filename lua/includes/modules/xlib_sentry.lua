@@ -667,7 +667,7 @@ local function buildPayload(err, stacktrace, extra, ply)
 	tags["Realm"] = ply and "CLIENT" or "SERVER"
 
 	if ply then
-		extra["user"] = ply
+		txn["user"] = ply
 		tags["Player"] = ply:SteamID()
 	end
 
