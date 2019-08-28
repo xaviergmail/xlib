@@ -121,7 +121,12 @@ end
 -- Generates a pretty printed name of the current operating sytem
 -- @within util
 -- @return "Windows", "macOS", "Linux" or nil.
-function GetOSName()
+function GetOSName(extra)
+	if extra and extra["user"] then
+		local ply = extra["user"]
+		return IsValid(ply) and ply.XLIB_OS or "Unknown OS"
+	end
+
 	if (system.IsWindows()) then
 		return "Windows";
 	elseif (system.IsOSX()) then
@@ -609,7 +614,7 @@ end
 local function getContexts(extra)
 	return {
 		os = {
-			name = GetOSName(),
+			name = GetOSName(extra),
 		},
 		runtime = {
 			name = "Garry's Mod",
