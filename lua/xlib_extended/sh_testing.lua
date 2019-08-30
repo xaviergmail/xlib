@@ -2,9 +2,9 @@ XLIB.Tests = XLIB.Tests or {}
 XLIB.Tests.Started = XLIB.Tests.Started or false
 
 -- FIXME: Lazy design, I apologize
-XLIB.Tests.Queue = {} --XLIB.Tests.Queue or {}
-XLIB.Tests.Errored = {} --XLIB.Tests.Errored or {}
-XLIB.Tests.Succeeded = {} --XLIB.Tests.Succeeded or {}
+XLIB.Tests.Queue = XLIB.Tests.Queue or {}
+XLIB.Tests.Errored = XLIB.Tests.Errored or {}
+XLIB.Tests.Succeeded = XLIB.Tests.Succeeded or {}
 
 -- FIXME: Currently assigned but never used.
 XLIB.Tests.QUEUED = 1
