@@ -1,10 +1,7 @@
-local unpack = (unpack or table.unpack)
-
 local function concat(...)
 	local s = ""
-	local t = {...}
-	for k, v in ipairs(t) do
-		s = s .. " " .. tostring(v)
+	for i=1, select("#", ...) do
+		s = s .. " " .. tostring(select(i, ...))
 	end
 
 	return s:Trim()
@@ -67,13 +64,15 @@ local function luacmd(ply, cmd, args, argstr)
 	end
 	fn = setfenv(fn, env)
 
-	local ret = {pcall(fn)}
+	local ret = table.PackNil(pcall(fn))
 
 	if not table.remove(ret, 1) then
-		env.print(unpack(ret))
+		env.print(table.UnpackNil(ret))
 	else
 		for _, r in ipairs(ret) do
-			if istable(r) and not f.islist(r) then
+			if r == table.NIL then
+				env.print('nil')
+			elseif istable(r) and not f.islist(r) then
 				env.print(r, ": PrintTable v\n", SPrintTable(r, 0, r, false))
 			else
 				env.print(r)
