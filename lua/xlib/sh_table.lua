@@ -29,3 +29,31 @@ function table.StoreKeys(src, key)
 	end
 	return src
 end
+
+-- The following allows you to safely pack varargs while retaining nil values
+table.NIL = table.NIL or setmetatable({}, {__tostring=function() return "nil placeholder" end})
+function table.PackNil(...)
+	local t = {}
+	for i=1, select("#", ...) do
+		local v = select(i, ...)
+
+		if v == nil then v = table.NIL end
+
+		table.insert(t, v)
+	end
+
+	return t
+end
+
+function table.UnpackNil(t, nocopy)
+	if #t == 0 then return end
+
+	if not nocopy then
+		t = table.Copy(t)
+	end
+
+	local v = table.remove(t, 1)
+	if v == table.NIL then v = nil end
+
+	return v, table.UnpackNil(t, true)
+end
