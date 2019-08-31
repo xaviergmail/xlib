@@ -27,7 +27,13 @@ local Err = f.apply(log, Color(255, 0, 0))
 XLIB.PostInitEntity(function()
 	timer.Create("XLib Start Tests", 0, 1, function()
 		XLIB.Tests.Started = true
-		for k, v in ipairs(XLIB.Tests.Queue) do
+
+		while true do
+			if #XLIB.Tests.Queue == 0 then break end
+
+			local v = table.remove(XLIB.Tests.Queue, 1)
+			if not v then break end
+
 			v.run()
 		end
 	end)
@@ -45,8 +51,6 @@ function XLIB.Test(name, test)
 			stra = success
 			success = stra == strb
 		end
-
-		table.RemoveByValue(XLIB.Tests.Queue, testData)
 
 		local fmt = ('[ %s ] -> [ %s ]'):format(name, reason)
 
@@ -122,7 +126,7 @@ DevCommand("xlib_teststatus", function()
 	Log("Current test status:")
 
 	for k, v in pairs(XLIB.Tests.Queue) do
-		Log("Running:", k)
+		Log("Running:", v.name)
 	end
 
 	for k, v in pairs(XLIB.Tests.Errored) do
@@ -134,7 +138,7 @@ DevCommand("xlib_teststatus", function()
 	end
 end)
 
-XLIB.Test("Make sure the test suite works", function(assert, done)
+XLIB.Test("Make sure the test suite works", function(assert)
 	assert("This works", true)
 	-- assert("String Comparison", "0123456789qwertyuiopasd?ghjklzxcvbnm,/;'[]-=`~!@#$%^&*()_+", "0123456789qwertyuiopasdfghjklzxcvbnm,/;'[]-=`~!@#$%^&*()_+")
 end)
