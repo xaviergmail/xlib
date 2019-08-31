@@ -1,3 +1,7 @@
+getmetatable(NULL).ChatPrint = function(_, ...)
+	print(...)
+end
+
 local function concat(...)
 	local s = ""
 	for i=1, select("#", ...) do
