@@ -1,10 +1,8 @@
-local MySQLOO_MetaID = 45
 local MySQLOO_MetaName = "MySQLOO table"
 
 local function IsMySQLOODB(tbl)
 	local mt = istable(tbl) and getmetatable(tbl) or {}
-	return mt and istable(mt) and mt.MetaID == MySQLOO_MetaID
-		   and mt.MetaName == MySQLOO_MetaName
+	return mt and istable(mt) and mt.MetaName == MySQLOO_MetaName
 end
 
 if not mysqloo then
@@ -566,12 +564,16 @@ hook.Add("Initialize", "InitSchemas", function()
 	_G.connect = connect
 	_G.migration = migration
 
-	hook.Run("GDBC:InitSchemas")
+	local succ, err = pcall(hook.Run, "GDBC:InitSchemas")
 
 	_G.schema = oSchema
 	_G.table = oTable
 	_G.connect = oConnect
 	_G.migration = oMigration
+
+	if not succ then
+		ErrorNoHalt("GDBC:InitSchemas failed "..err)
+	end
 
 	for k, v in pairs(DB.__schemas) do
 		perform_migrations(v)

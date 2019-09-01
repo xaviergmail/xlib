@@ -33,8 +33,9 @@ end
 f.apply  = function (f, ...)
 	local args = {...}
 	return function (...)
-		table.Add(args, {...})
-		return f (unpack(args))
+		local t = table.Copy(args)
+		table.Add(t, {...})
+		return f (unpack(t))
 	end
 end
 

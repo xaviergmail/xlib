@@ -7,7 +7,7 @@ _P = _R.Player
 local green = Color(0, 255, 150)
 local function log(...)
 	local s = "XLoader: "
-	for k, v in pairs({...}) do
+	for k, v in ipairs({...}) do
 		s = s .. tostring(v) .. " "
 	end
 
