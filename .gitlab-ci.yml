@@ -7,6 +7,7 @@ publish_npm:
   tags:
     - npm
 
+# Hi
 publish_npm_develop:
   stage: deploy
   script:
