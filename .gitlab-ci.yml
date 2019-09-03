@@ -6,3 +6,13 @@ publish_npm:
     - master
   tags:
     - npm
+
+publish_npm_develop:
+  stage: deploy
+  script:
+    - npm-scp-publish dev
+  only:
+    - develop
+  tags:
+    - npm
+    
