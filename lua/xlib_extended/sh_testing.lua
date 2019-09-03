@@ -100,7 +100,7 @@ function XLIB.Test(name, test)
 	function testData.run()
 		Log("Running test", name)
 		testData.status = XLIB.Tests.RUNNING
-		test(callback)
+		test(callback, Log, Err)
 	end
 
 
