@@ -15,4 +15,3 @@ publish_npm_develop:
     - develop
   tags:
     - npm
-    
