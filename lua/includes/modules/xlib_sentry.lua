@@ -678,7 +678,13 @@ local function buildPayload(err, stacktrace, extra, ply)
 	end
 
 	txn["extra"] = txn["extra"] or {}
-	txn["extra"]["Stack"] = SPrintTable(stacktrace)
+
+	local stackIgnore = {
+		[GAMEMODE] = true,
+		[_G] = true,
+		[hook.GetTable()] = true,
+	}
+	txn["extra"]["Stack"] = SPrintTable(stacktrace, 0, stackIgnore)
 
 	return {
 		event_id = UUID4(),
