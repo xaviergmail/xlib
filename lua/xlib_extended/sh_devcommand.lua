@@ -68,7 +68,7 @@ local function luacmd(ply, cmd, args, argstr)
 	end
 	fn = setfenv(fn, env)
 
-	local ret = table.PackNil(pcall(fn))
+	local ret = table.PackNil(xpcall(fn, debug.traceback))
 
 	if not table.remove(ret, 1) then
 		env.print(table.UnpackNil(ret))

@@ -158,8 +158,8 @@ function MAP:Load(dir)
 	tryClient "cl_hooks.lua"
 
 	if GAMEMODE then
-		pcall(hooks.Initialize)
-		pcall(hooks.InitPostEntity)
+		ProtectedCall(hooks.Initialize)
+		ProtectedCall(hooks.InitPostEntity)
 	end
 
 	for k, v in pairs(hooks) do
