@@ -579,23 +579,14 @@ hook.Add("Initialize", "InitSchemas", function()
 		perform_migrations(v)
 	end
 
-	local hibernate = GetConVar("sv_hibernate_think")
-	local changedTo = 31337  -- magic number to avoid collisions
-	local origHibernate = hibernate:GetString()
-	local changedHibernate = false
-	if not hibernate:GetBool() then
-		changedHibernate = true
-		RunConsoleCommand(hibernate:GetName(), changedTo)
-	end
+	RunConsoleCommand("sv_hibernate_think", 1)
+
 
 	hook.Add("Think", "GDBC:PollMigrations", function()
 		for k, v in pairs(DB.__schemas) do
 			if not v.MIGRATIONS_COMPLETED then return end
 		end
 
-		if changedHibernate and hibernate:GetInt() == changedTo then
-			RunConsoleCommand(hibernate:GetName(), origHibernate)
-		end
 
 		hook.Remove("Think", "GDBC:PollMigrations")
 		hook.Remove("CheckPassword", "GDBC:WaitForMigrations")
