@@ -5,3 +5,29 @@ function XLIB.FreezeProp(ent)
 		phys:EnableMotion(false)
 	end
 end
+
+local ashift, rshift, gshift, bshift = 8*4, 8*3, 8*2, 8*1
+
+local amask = bit.lshift(0xFF, ashift)
+local rmask = bit.lshift(0xFF, rshift)
+local gmask = bit.lshift(0xFF, gshift)
+local bmask = bit.lshift(0xFF, bshift)
+
+function XLIB.ColorToInt(color)
+	return bit.bor(
+		bit.lshift(color.a, ashift),
+		bit.lshift(color.r, rshift),
+		bit.lshift(color.g, gshift),
+		bit.lshift(color.b, bshift)
+	)
+end
+
+function XLIB.IntToColor(int)
+	local a, r, g, b =
+		bit.rshift(bit.band(int, amask), ashift),
+		bit.rshift(bit.band(int, rmask), rshift),
+		bit.rshift(bit.band(int, gmask), gshift),
+		bit.rshift(bit.band(int, bmask), bshift)
+
+	return Color(r, g, b, a)
+end
