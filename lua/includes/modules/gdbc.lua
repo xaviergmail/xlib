@@ -564,7 +564,7 @@ hook.Add("Initialize", "InitSchemas", function()
 	_G.connect = connect
 	_G.migration = migration
 
-	local succ, err = pcall(hook.Run, "GDBC:InitSchemas")
+	local succ, err = xpcall(hook.Run, debug.traceback, "GDBC:InitSchemas")
 
 	_G.schema = oSchema
 	_G.table = oTable

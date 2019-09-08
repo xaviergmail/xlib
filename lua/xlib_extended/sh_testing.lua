@@ -100,7 +100,16 @@ function XLIB.Test(name, test)
 	function testData.run()
 		Log("Running test", name)
 		testData.status = XLIB.Tests.RUNNING
-		test(callback, Log, Err)
+
+		XLIB.Tests.Errored[name] = false
+
+		local succ, err = xpcall(test, debug.traceback, callback, Log, Err)
+		if not succ then
+			Err("Error occurred while performing test")
+			Err(err)
+			testData.status = XLIB.Tests.FAILED
+			XLIB.Tests.Errored[name] = true
+		end
 	end
 
 
