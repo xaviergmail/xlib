@@ -101,7 +101,7 @@ function XLIB.Test(name, test)
 		Log("Running test", name)
 		testData.status = XLIB.Tests.RUNNING
 
-		XLIB.Tests.Errored[name] = false
+		XLIB.Tests.Errored[name] = nil
 
 		local succ, err = xpcall(test, debug.traceback, callback, Log, Err)
 		if not succ then
@@ -145,6 +145,11 @@ DevCommand("xlib_teststatus", function()
 	for k, v in pairs(XLIB.Tests.Succeeded) do
 		Log("Succeeded:", k)
 	end
+end)
+
+DevCommand("xlib_cleartests", function()
+	XLIB.Tests.Errored = {}
+	XLIB.Tests.Queue   = {}
 end)
 
 XLIB.Test("Make sure the test suite works", function(assert)
