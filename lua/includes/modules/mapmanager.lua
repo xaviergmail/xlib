@@ -5,7 +5,11 @@ It has support for default sane values
 "Why not just save it as JSON?" - Functions!
 You can run any arbitrary code anywhere, add hooks, etc
 
-Usage: require "mapmanager" MAP:AddDirectory("uniquename_mapconfig")
+Usage:
+require "mapmanager"
+MAP:Add("uniquename_mapconfig")
+OR
+MAP:Load("uniquename_mapconfig")  -- Autorefresh-aware
 
 Structure:
 lua/uniquename_mapconfig/
@@ -15,6 +19,7 @@ lua/uniquename_mapconfig/
 - map_name/ ( without _v[%d%w]+" eg: rp_evocity_v2p  = "rp_evocity" )
   - resources.lua ( runs serverside. Useful for resource.Add* )
   - (sv|cl|sh)_settings.lua
+  - (sv|cl|sh)_settings_preinit.lua  -- Runs after gamemode/Lua initialization, but before Initialize
   - (sv|cl|sh)_hooks.lua
 
 ]]
@@ -147,6 +152,13 @@ function MAP:Load(dir)
 	tryShared "sh_settings.lua"
 	tryClient "cl_settings.lua"
 
+	XLIB.PreInitialize(function()
+		tryServer "sv_settings_preinit.lua"
+		tryShared "sh_settings_preinit.lua"
+		tryClient "cl_settings_preinit.lua"
+	end)
+
+
 	for k, v in pairs(settings) do
 		MAP:Set(k, v)
 	end
@@ -158,8 +170,8 @@ function MAP:Load(dir)
 	tryClient "cl_hooks.lua"
 
 	if GAMEMODE then
-		pcall(hooks.Initialize)
-		pcall(hooks.InitPostEntity)
+		ProtectedCall(hooks.Initialize)
+		ProtectedCall(hooks.InitPostEntity)
 	end
 
 	for k, v in pairs(hooks) do
