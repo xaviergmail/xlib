@@ -5,7 +5,7 @@ It has support for default sane values
 "Why not just save it as JSON?" - Functions!
 You can run any arbitrary code anywhere, add hooks, etc
 
-Usage: require "mapmanager" MAP:AddDirectory("uniquename_mapconfig")
+Usage: require "mapmanager" MAP:Add("uniquename_mapconfig")
 
 Structure:
 lua/uniquename_mapconfig/
