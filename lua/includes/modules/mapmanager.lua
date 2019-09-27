@@ -19,6 +19,7 @@ lua/uniquename_mapconfig/
 - map_name/ ( without _v[%d%w]+" eg: rp_evocity_v2p  = "rp_evocity" )
   - resources.lua ( runs serverside. Useful for resource.Add* )
   - (sv|cl|sh)_settings.lua
+  - (sv|cl|sh)_settings_preinit.lua  -- Runs after gamemode/Lua initialization, but before Initialize
   - (sv|cl|sh)_hooks.lua
 
 ]]
@@ -150,6 +151,13 @@ function MAP:Load(dir)
 	tryServer "sv_settings.lua"
 	tryShared "sh_settings.lua"
 	tryClient "cl_settings.lua"
+
+	XLIB.PreInitialize(function()
+		tryServer "sv_settings_preinit.lua"
+		tryShared "sh_settings_preinit.lua"
+		tryClient "cl_settings_preinit.lua"
+	end)
+
 
 	for k, v in pairs(settings) do
 		MAP:Set(k, v)
