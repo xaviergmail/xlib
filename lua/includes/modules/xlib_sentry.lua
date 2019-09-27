@@ -680,7 +680,7 @@ local function buildPayload(err, stacktrace, extra, ply)
 	txn["extra"] = txn["extra"] or {}
 
 	local stackIgnore = {
-		[GAMEMODE] = true,
+		[(GAMEMODE and GAMEMODE or GM or false)] = true,
 		[_G] = true,
 		[hook.GetTable()] = true,
 	}
