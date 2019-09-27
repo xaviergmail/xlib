@@ -8,6 +8,14 @@ function XLIB.PostInitialize(fn)
 	end
 end
 
+function XLIB.PreInitialize(fn)
+	if GAMEMODE then
+		fn()
+	else
+		hook.Add("PostGamemodeLoaded", "XLIB.PreInitialize"..tostring(fn), fn)
+	end
+end
+
 XLIB.DidInitPostEntity = XLIB.DidInitPostEntity or false
 function XLIB.PostInitEntity(fn)
 	if XLIB.DidInitPostEntity then
