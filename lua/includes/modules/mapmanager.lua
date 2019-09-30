@@ -152,16 +152,21 @@ function MAP:Load(dir)
 	tryShared "sh_settings.lua"
 	tryClient "cl_settings.lua"
 
-	XLIB.PreInitialize(function()
-		tryServer "sv_settings_preinit.lua"
-		tryShared "sh_settings_preinit.lua"
-		tryClient "cl_settings_preinit.lua"
-	end)
-
-
 	for k, v in pairs(settings) do
 		MAP:Set(k, v)
 	end
+
+	XLIB.PreInitialize(function()
+		local settings = reset()
+
+		tryServer "sv_settings_preinit.lua"
+		tryShared "sh_settings_preinit.lua"
+		tryClient "cl_settings_preinit.lua"
+
+		for k, v in pairs(settings) do
+			MAP:Set(k, v)
+		end
+	end)
 
 	local hooks = reset()
 
