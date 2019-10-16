@@ -258,10 +258,13 @@ xloader("xlib", function(f) include(f) end)
 ```
 
 ## XLIB.Timer
-This is an easy-to-use timing tool for profiling purposes.
+This is an easy-to-use timing tool for basic profiling purposes.
 `XLIB.Time(identifier)`
 The identifier does not need to be unique. It will be used as a prefix for printing results.
 It allows you to log different "stages" during the profiling process and will time each step.
+
+If you want precise, multi-run profiling, check out [FProfiler](https://github.com/FPtje/FProfiler) instead.
+The main goal of this small module is to isolate lenghty processes once you have already figured out the bottleneck.
 
 ```lua
     clock:Start()  -- Starts the timer. Optional, call :Log() to start as well. Returns clock object.
