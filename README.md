@@ -257,6 +257,87 @@ xloader("xlib", function(f) include(f) end)
 -- Second argument is required boilerplate to make it autorefresh-aware. View linked bug report above.
 ```
 
+## XLIB.Timer
+This is an easy-to-use timing tool for profiling purposes.
+`XLIB.Time(identifier)`
+The identifier does not need to be unique. It will be used as a prefix for printing results.
+It allows you to log different "stages" during the profiling process and will time each step.
+
+```lua
+    clock:Start()  -- Starts the timer. Optional, call :Log() to start as well. Returns clock object.
+    clock:Log(event)  -- Logs an event at this point in time
+    clock:Print(...)  -- Queues the print to be printed with prefix at the end of execution.
+                      -- It will print instantly if the clock is not started
+
+    clock:Finish()    -- Finishes the timer and prints out the results
+
+```
+
+```lua
+-- If you intend to re-use this clock, you can store it locally outside this scope
+-- local clock = XLIB.Time("pairs vs ipairs vs for")
+-- then call start in your event loop or something
+-- clock:Start()
+
+-- Alternatively, :Start() will return the clock object as well for one seamless operation
+local clock = XLIB.Time("pairs vs ipairs vs for"):Start()
+
+local b = 0
+local str = string.rep("TEST", 10^3)
+local t = {}
+for i=1, 1000 do
+    table.Add(t, {string.byte(str, 1, str:len())})
+end
+
+-- Clock:Print(...) will defer printing (with timer prefix) to the end of the
+-- timing process to keep the output linear and to reduce I/O bottlenecks
+clock:Print("Testing with", #t, "iterations")
+
+-- Call :Log() after an action to add a memo at this particular timestamp
+-- Calling :Log() will also call :Start() if it has not yet been started.
+clock:Log("Build test data")
+
+b = 0
+for k, v in pairs(t) do
+    b = b + v
+end
+clock:Log("pairs")
+
+b = 0
+for k, v in ipairs(t) do
+    b = b + v
+end
+clock:Log("ipairs")
+
+b = 0
+for i=1, #t do
+    b = b + t[i]
+end
+clock:Log("for")
+
+b = 0
+local l = #t
+for i=1, l do
+    b = b + t[i]
+end
+clock:Log("for w/ cached len")
+
+clock:Finish()
+
+```
+
+Output
+```
+
+[pairs vs ipairs vs for]  Testing with 4000000 iterations
+[pairs vs ipairs vs for]  Build test data took 0.879236  - T+0.879236
+[pairs vs ipairs vs for]  pairs took 0.023838  - T+0.903073
+[pairs vs ipairs vs for]  ipairs took 0.004902  - T+0.907975
+[pairs vs ipairs vs for]  for took 0.005205  - T+0.91318
+[pairs vs ipairs vs for]  for w/ cached len took 0.003529  - T+0.916708
+[pairs vs ipairs vs for]  Finished in  0.91671
+```
+
 ## XLIB Extended
 This is a part of XLIB disabled by default for use in packaged applications.
 To enable, simply set `extended "1"` in your `CREDENTIAL_STORE`
