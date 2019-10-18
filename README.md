@@ -269,6 +269,7 @@ The main goal of this small module is to isolate lenghty processes once you have
 ```lua
     clock:Start()  -- Starts the timer. Optional, call :Log() to start as well. Returns clock object.
     clock:Log(event)  -- Logs an event at this point in time
+    clock("evt")      -- Alias to clock:Log() allows for `clock "Something"`
     clock:Print(...)  -- Queues the print to be printed with prefix at the end of execution.
                       -- It will print instantly if the clock is not started
 
@@ -316,14 +317,14 @@ b = 0
 for i=1, #t do
     b = b + t[i]
 end
-clock:Log("for")
+clock "for"  -- Using alternative, faster to write for quick iterations
 
 b = 0
 local l = #t
 for i=1, l do
     b = b + t[i]
 end
-clock:Log("for w/ cached len")
+clock "for w/ cached len"
 
 clock:Finish()
 
