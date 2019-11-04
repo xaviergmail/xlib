@@ -31,9 +31,9 @@ local directories = MAP and MAP.Directories or {}
 _G.MAP = {}
 _G.mapmanager = MAP
 
-MAP.__settings = {}
 
 MAP.__defaults = {}
+MAP.__settings = setmetatable({}, {__index = MAP.__defaults})
 
 MAP.Directories = {}
 
@@ -46,7 +46,7 @@ function MAP:Register(key, default)
 end
 
 function MAP:Get(key)
-	return self.__settings[key] or self.__defaults[key]
+	return self.__settings[key]
 end
 
 function MAP:Set(key, value)
