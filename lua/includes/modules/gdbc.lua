@@ -1,3 +1,5 @@
+GDBC = GDBC or {}
+
 local MySQLOO_MetaName = "MySQLOO table"
 
 local function IsMySQLOODB(tbl)
@@ -553,27 +555,30 @@ local function migration(id)
     end
 end
 
-hook.Add("Initialize", "InitSchemas", function()
-	local oSchema = _G.schema
-	local oTable = _G.table
-	local oConnect = _G.connect
-	local oMigration = _G.migration
 
-	_G.schema = schema
-	_G.table = table
-	_G.connect = connect
-	_G.migration = migration
+local env = setmetatable({
+	schema=schema,
+	table=table,
+	connect=connect,
+	migration=migration,
+}, {__index=_G})
 
+local g = _G
+function GDBC.LoadSchema(fname)
+	setfenv(CompileFile(fname), env)()
+end
+
+function GDBC.InitSchemas()
 	local succ, err = xpcall(hook.Run, debug.traceback, "GDBC:InitSchemas")
-
-	_G.schema = oSchema
-	_G.table = oTable
-	_G.connect = oConnect
-	_G.migration = oMigration
 
 	if not succ then
 		ErrorNoHalt("GDBC:InitSchemas failed "..err)
 	end
+end
+DevCommand("gdbc_reload", GDBC.InitSchemas)
+
+hook.Add("Initialize", "InitSchemas", function()
+	GDBC.InitSchemas()
 
 	for k, v in pairs(DB.__schemas) do
 		perform_migrations(v)
