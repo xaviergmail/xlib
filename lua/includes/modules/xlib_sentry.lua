@@ -680,8 +680,9 @@ local function buildPayload(err, stacktrace, extra, ply)
 	txn["extra"] = txn["extra"] or {}
 
 	local stackIgnore = {
-		[(GAMEMODE and GAMEMODE or GM or false)] = true,
-		[_G] = true,
+		[(g.GAMEMODE and g.GAMEMODE or g.GM) or false] = true,
+		[g] = true,
+		[g._G] = true,
 		[hook.GetTable()] = true,
 	}
 	txn["extra"]["Stack"] = SPrintTable(stacktrace, 0, stackIgnore)
