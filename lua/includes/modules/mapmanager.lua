@@ -31,9 +31,9 @@ local directories = MAP and MAP.Directories or {}
 _G.MAP = {}
 _G.mapmanager = MAP
 
-MAP.__settings = {}
 
 MAP.__defaults = {}
+MAP.__settings = setmetatable({}, {__index = MAP.__defaults})
 
 MAP.Directories = {}
 
@@ -46,7 +46,7 @@ function MAP:Register(key, default)
 end
 
 function MAP:Get(key)
-	return self.__settings[key] or self.__defaults[key]
+	return self.__settings[key]
 end
 
 function MAP:Set(key, value)
@@ -73,6 +73,10 @@ local mt = setmetatable({},
 {
 	__index = function(t, k)
 		if rawget(vars, k) then return rawget(vars, k) end
+		if k == "TODO" then
+			XLIB.WarnTrace("MapManager needs to implement:")
+			return nil
+		end
 		return rawget(global, k)
 	end,
 
@@ -152,16 +156,21 @@ function MAP:Load(dir)
 	tryShared "sh_settings.lua"
 	tryClient "cl_settings.lua"
 
-	XLIB.PreInitialize(function()
-		tryServer "sv_settings_preinit.lua"
-		tryShared "sh_settings_preinit.lua"
-		tryClient "cl_settings_preinit.lua"
-	end)
-
-
 	for k, v in pairs(settings) do
 		MAP:Set(k, v)
 	end
+
+	XLIB.PreInitialize(function()
+		local settings = reset()
+
+		tryServer "sv_settings_preinit.lua"
+		tryShared "sh_settings_preinit.lua"
+		tryClient "cl_settings_preinit.lua"
+
+		for k, v in pairs(settings) do
+			MAP:Set(k, v)
+		end
+	end)
 
 	local hooks = reset()
 

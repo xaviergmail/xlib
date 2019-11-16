@@ -76,7 +76,7 @@ function XLIB.Test(name, test)
 				local len = math.min(stralen, strblen)
 
 				if stralen != strblen then
-					Err(("String lenghts differed A: %d B: %d"):format(stralen, strblen))
+					Err(("String lengths differed A: %d B: %d"):format(stralen, strblen))
 				end
 
 				for i=1, len do
