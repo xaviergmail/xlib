@@ -31,3 +31,15 @@ function XLIB.IntToColor(int)
 
 	return Color(r, g, b, a)
 end
+
+function XLIB.SafeColor(color, noalpha)
+	color.r = math.Clamp(color.r, 0, 255)
+	color.g = math.Clamp(color.g, 0, 255)
+	color.b = math.Clamp(color.b, 0, 255)
+	color.a = noalpha and 255 or math.Clamp(color.a, 0, 255)
+	return color
+end
+
+function XLIB.SafeColorNoAlpha(color)
+	return XLIB.SafeColor(color, true)
+end
