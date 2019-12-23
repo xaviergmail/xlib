@@ -117,7 +117,7 @@ function random.RandomInt( iLow, iHigh )
 	repeat
 		n = random.GenerateRandomNumber()
 	until (n <= maxAcceptable)
-	return iLow + (n % x)
+	return math.floor(iLow + (n % x))
 end
 //-----------------------------------------------------------------------------
 //
