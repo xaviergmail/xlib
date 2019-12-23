@@ -85,3 +85,32 @@ end
 function ProgressColor(scalar)
 	return progressCols[math.floor(math.Clamp(scalar, 0, 1)*100)]
 end
+
+_R.Panel.RxPanelMeta = _R.Panel.RxPanelMeta or {}
+_R.Panel._OnRemove = _R.Panel._OnRemove or _R.Panel.OnRemove
+
+local function IsRxSubscriptions(tbl)
+	return tbl and istable(tbl) and getmetatable(tbl) == _R.Panel.RxPanelMeta
+end
+
+function _R.Panel:SetupRx(tbl)
+	self:CleanupRx()
+	self.Subscriptions = setmetatable(tbl or {}, _R.Panel.RxPanelMeta)
+
+	self._OnRemove = self._OnRemove or self.OnRemove
+	self.OnRemove = function(this)
+		if IsRxSubscriptions(this.Subscriptions) then
+			this:CleanupRx()
+		end
+
+		return this:_OnRemove()
+	end
+end
+
+function _R.Panel:CleanupRx()
+	if self.Subscriptions then
+		for k, v in ipairs(self.Subscriptions) do
+			v:unsubscribe()
+		end
+	end
+end
