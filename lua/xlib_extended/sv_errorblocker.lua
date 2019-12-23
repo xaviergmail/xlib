@@ -15,6 +15,7 @@ end
 
 function XLIB.BlockStartup(reason)
 	OnLuaError(nil, reason)
+	XLIB.WarnTrace("Server startup join was blocked: "..reason)
 end
 
 hook.Add("LuaError", "XLib Error Blocker", OnLuaError)
@@ -37,7 +38,7 @@ end)
 DevCommand("xlib_startuperrors", function()
 	for k, v in pairs(XLIB.StartupErrors) do
 		MsgN("-----")
-		MsgC(Color(0, 255, 255), v)
+		MsgC(Color(0, 255, 255), k)
 		Msg("\n\n")
 	end
 end)
