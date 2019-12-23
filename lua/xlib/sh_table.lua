@@ -57,3 +57,9 @@ function table.UnpackNil(t, nocopy)
 
 	return v, table.UnpackNil(t, true)
 end
+
+-- Only works on sequential tables. The other implementation of table randomness is complete jank.
+function table.TrueRandom(tbl)
+	local n = random.RandomInt(1, #tbl)
+	return tbl[n]
+end
