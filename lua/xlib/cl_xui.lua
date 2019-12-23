@@ -41,6 +41,14 @@ function ScreenScaleY(y)
 	return math.Round(y / 480 * H())
 end
 
+function ScreenScale1080X(x)
+	return math.Round(x / 1920 * W())
+end
+
+function ScreenScale1080Y(y)
+	return math.Round(y / 1080 * H())
+end
+
 function ScaleX(pct)
 	return pct/100*ScrW43()
 end
