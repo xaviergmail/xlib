@@ -74,7 +74,8 @@ local mt = setmetatable({},
 	__index = function(t, k)
 		if rawget(vars, k) then return rawget(vars, k) end
 		if k == "TODO" then
-			XLIB.WarnTrace("MapManager needs to implement:")
+			local dbg = debug.getinfo(2)
+			XLIB.BlockStartup("MapManager needs to implement: " ..dbg.source..":"..dbg.currentline)
 			return nil
 		end
 		return rawget(global, k)
