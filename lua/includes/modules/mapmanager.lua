@@ -195,6 +195,6 @@ function MAP:LoadAll()
 	end
 end
 
-DevCommand("loadmapconfig", function()
+DevCommand("mapmanager.reload", function()
 	MAP:LoadAll()
 end)
