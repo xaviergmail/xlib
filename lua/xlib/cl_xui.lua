@@ -87,7 +87,7 @@ function ProgressColor(scalar)
 end
 
 _R.Panel.RxPanelMeta = _R.Panel.RxPanelMeta or {}
-_R.Panel._OnRemove = _R.Panel._OnRemove or _R.Panel.OnRemove
+_R.Panel._OnRemove = _R.Panel._OnRemove or _R.Panel.OnRemove or NOOP
 
 local function IsRxSubscriptions(tbl)
 	return tbl and istable(tbl) and getmetatable(tbl) == _R.Panel.RxPanelMeta
@@ -97,7 +97,7 @@ function _R.Panel:SetupRx(tbl)
 	self:CleanupRx()
 	self.Subscriptions = setmetatable(tbl or {}, _R.Panel.RxPanelMeta)
 
-	self._OnRemove = self._OnRemove or self.OnRemove
+	self._OnRemove = self._OnRemove or self.OnRemove or NOOP
 	self.OnRemove = function(this)
 		if IsRxSubscriptions(this.Subscriptions) then
 			this:CleanupRx()
