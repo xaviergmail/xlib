@@ -26,7 +26,7 @@ end)
 
 hook.Add("CheckPassword", "XLib Error Blocker", function()
 	if XLIB.StartupErrorCount > 0 and not XLIB.StartupErrorBypass then
-		return false, ""
+		return false, "Server errored during startup."
 	end
 end)
 
