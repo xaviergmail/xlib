@@ -4,8 +4,8 @@ if not luaerror then return end
 
 luaerror.EnableRuntimeDetour(true)
 
-XLIB.StartupErrors = {}
-XLIB.StartupErrorCount = 0
+XLIB.StartupErrors = XLIB.StartupErrors or {}
+XLIB.StartupErrorCount = XLIB.StartupErrorCount or 0
 local function OnLuaError(is_runtime, rawErr, file, lineno, err, stack)
 	if not XLIB.StartupErrors[rawErr] then
 		XLIB.StartupErrorCount = XLIB.StartupErrorCount + 1
