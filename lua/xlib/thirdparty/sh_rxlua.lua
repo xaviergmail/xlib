@@ -74,7 +74,10 @@ end
 -- @arg {*...} values
 function Observer:onNext(...)
   if not self.stopped then
-    self._onNext(...)
+    local succ, err = pcall(self._onNext, ...)
+    if not succ then
+      ErrorNoHalt(err.."\n"..debug.traceback().."\n")
+    end
   end
 end
 

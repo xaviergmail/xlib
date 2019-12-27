@@ -122,5 +122,3 @@ end
 function stringbuf:ReadMUserdata()
 	return {self:Unpack("ffff", sizeof(MUserdata)/8)}
 end
-
-print("stringbuf loaded"..CurTime())
