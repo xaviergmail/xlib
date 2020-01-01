@@ -1,4 +1,4 @@
-local multirun_file = "xlib_extended/sv_multirun.lua"
+local multirun_file = "xlib_extended/multirun.lua"
 
 if SERVER then
 	if XLIB.Extended then
