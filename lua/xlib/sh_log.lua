@@ -7,3 +7,7 @@ end
 function XLIB.WarnTrace(...)
 	MsgC(red, SPrint("WARNING:", ...).."\n"..debug.traceback().."\n")
 end
+
+function XLIB.Implement(...)
+	ErrorNoHalt(SPrint("NOT IMPLEMENTED:", ...).."\n"..debug.traceback().."\n")
+end
