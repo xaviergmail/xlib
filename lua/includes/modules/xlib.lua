@@ -1,4 +1,5 @@
 AddCSLuaFile()
+_MODULES.xlib = true
 
 require "xloader"
 xloader("xlib", function(f) include(f) end)
