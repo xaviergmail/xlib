@@ -29,7 +29,9 @@ function print(...)
     end
     incr = incr + 1
 
-    MsgC(fileColors[fname], fname..':'..info.linedefined)
+    if info.what != "C" then
+        MsgC(fileColors[fname], fname..':'..info.linedefined)
+    end
     OldPrint('',...)
 
     incr = incr + 30
