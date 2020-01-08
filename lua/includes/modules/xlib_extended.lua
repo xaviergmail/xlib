@@ -20,6 +20,10 @@ end
 
 xloader("xlib_extended", function(f) include(f) end)
 
+local devports = {
+	["13337"] = true,
+	["13338"] = true,
+}
 function IsTestServer()
-	return GetGlobalBool("development_mode") and game.GetIPAddress():Split(":")[2] == "13337"
+	return GetGlobalBool("development_mode") and devports[game.GetIPAddress():Split(":")[2]]
 end
