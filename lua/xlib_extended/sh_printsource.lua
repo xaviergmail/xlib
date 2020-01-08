@@ -25,7 +25,7 @@ function print(...)
     end
 
     if not fileColors[fname] then
-        fileColors[fname] = HSVToColor(incr * 60 % 360, SERVER and 1 or 1, 0.8)
+        fileColors[fname] = HSVToColor(incr * 60 % 360, SERVER and (game.IsDedicated() and 1 or 0.5) or 1, 1)
     end
     incr = incr + 1
 
