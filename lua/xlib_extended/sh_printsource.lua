@@ -25,14 +25,12 @@ function print(...)
     end
 
     if not fileColors[fname] then
-        fileColors[fname] = HSVToColor(incr * 60 % 360, SERVER and (game.IsDedicated() and 1 or 0.5) or 1, 1)
+        fileColors[fname] = HSVToColor(incr*60%360, SERVER and (game.IsDedicated() and 1 or 0.5) or 1, 0.8)
+        incr = incr + 1
     end
-    incr = incr + 1
 
     if info.what != "C" then
-        MsgC(fileColors[fname], fname..':'..info.linedefined)
+        MsgC(fileColors[fname], fname..':'..info.currentline.."/"..info.linedefined, "\t")
     end
     OldPrint(...)
-
-    incr = incr + 30
 end
