@@ -8,6 +8,7 @@ if SERVER then
 	require "credentialstore"
 end
 
-if SERVER or file.Exists("includes/modules/xlib_extended.lua", "LUA") then
-	require "xlib_extended"
+local extended = "xlib/xlib_extended.lua"
+if SERVER or file.Exists(extended, "LUA") then
+	include(extended)
 end
