@@ -1,0 +1,1 @@
+debian run ./mobdebug.sh
