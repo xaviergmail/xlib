@@ -26,6 +26,8 @@ lua/uniquename_mapconfig/
 
 AddCSLuaFile()
 
+local blockstartup = SERVER and XLIB.BlockStartup or ErrorNoHalt
+
 local directories = MAP and MAP.Directories or {}
 
 _G.MAP = {}
@@ -51,7 +53,7 @@ end
 
 function MAP:Set(key, value)
 	if self.__defaults[key] == nil then
-		ErrorNoHalt("Warning: Setting non-registered key: "..tostring(key).."\n")
+		blockstartup("Warning: Setting non-registered key: "..tostring(key).."\n")
 	end
 
 	self.__settings[key] = value
@@ -75,7 +77,7 @@ local mt = setmetatable({},
 		if rawget(vars, k) then return rawget(vars, k) end
 		if k == "TODO" then
 			local dbg = debug.getinfo(2)
-			XLIB.BlockStartup("MapManager needs to implement: " ..dbg.source..":"..dbg.currentline)
+			blockstartup("MapManager needs to implement: " ..dbg.source..":"..dbg.currentline)
 			return nil
 		end
 		return rawget(global, k)
