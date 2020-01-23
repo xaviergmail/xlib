@@ -5,7 +5,7 @@ local table = table
 function SPrint(...)
 	local str = ""
 
-	local args = {...}
+	local args = table.PackNil(...)
 	for k, v in ipairs(args) do
 		str = str .. " " .. tostring(v)
 	end
