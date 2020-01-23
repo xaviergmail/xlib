@@ -199,4 +199,4 @@ end
 
 DevCommand("mapmanager.reload", function()
 	MAP:LoadAll()
-end)
+end, true)
