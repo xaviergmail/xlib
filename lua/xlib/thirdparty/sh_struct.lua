@@ -238,13 +238,9 @@ function struct.unpack(format, stream)
       local n = 4
       local signed = false
 
-      print(opt, stream)
       local len = 0
       for j = 1, n do
         local byte = string.byte(stream:sub(iterator, iterator))
-        if not byte then print("Iterator", iterator, "streamlen", stream:len())
-          print(stream:hexdump())
-        end
         if endianness then
           len = len + byte * (2 ^ ((j - 1) * 8))
         else
