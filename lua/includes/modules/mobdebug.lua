@@ -8,8 +8,8 @@ end
 -- Based on RemDebug 1.0 Copyright Kepler Project 2005
 --
 
-local function safeload(module)
-  if gmod then return end
+local function safeload(module, dogmod)
+  if gmod and not dogmod then return end
 
   local ok, res = pcall(require, module)
   return ok and res or nil
@@ -35,7 +35,7 @@ if gmod then
     return setfenv(var, getfenv(1))
   end
 
-  safeload "debug"
+  safeload("debug", true)
 end
 
 local debug_setupvalue = debug.setupvalue or function() ErrorNoHalt("debug.setupvalue is missing. You should install the binary files provided in the XLIB repo.\n") end
@@ -49,7 +49,7 @@ local mobdebug = {
   port = os and os.getenv and tonumber((os.getenv("MOBDEBUG_PORT"))) or 8172,
   checkcount = 200,
   yieldtimeout = 0.02, -- yield timeout (s)
-  connecttimeout = 2, -- connect timeout (s)
+  connecttimeout = 0.2, -- connect timeout (s)
 }
 
 local HOOKMASK = "lcr"
@@ -121,7 +121,7 @@ local iscasepreserving = win or (mac and io.open('/library') ~= nil)
 -- http://www.freelists.org/post/luajit/Debug-hooks-and-JIT,2
 -- "You need to turn it off at the start if you plan to receive
 -- reliable hook calls at any later point in time."
-if jit and jit.off then jit.off() end
+-- if jit and jit.off then jit.off() end
 
 local socket = require "socket" or genv.socket
 local coro_debugger
@@ -318,12 +318,11 @@ local function stack(start)
     local i = 1
     local locals = {}
     -- get locals
-    while true do
+    while i < 100 do
+      genv.DICK = func
       local name, value = debug.getlocal(f, i)
       if not name then break end
-      if string.sub(name, 1, 1) ~= '(' then
-        locals[name] = {value, select(2,pcall(tostring,value))}
-      end
+      locals[name] = {value, select(2,pcall(tostring,value))}
       i = i + 1
     end
     -- get varargs (these use negative indices)
@@ -514,6 +513,8 @@ end
 
 local function is_pending(peer)
   -- if there is something already in the buffer, skip check
+  if not peer then return end
+
   if not buf and checkcount >= mobdebug.checkcount then
     peer:settimeout(0) -- non-blocking
     buf = peer:receive(1)
@@ -1077,6 +1078,7 @@ local function output(stream, data)
   if server then return server:send("204 Output "..stream.." "..tostring(#data).."\n"..data) end
 end
 
+local off
 local function connect(controller_host, controller_port)
   local sock, err = socket.tcp()
   if not sock then return nil, err end
@@ -1089,7 +1091,7 @@ local function connect(controller_host, controller_port)
   return sock
 end
 
-local lasthost, lastport
+local lasthost, lastport = '127.0.0.1', SERVER and 9000 or 9005
 
 -- Starts a debug session by connecting to a controller
 local function start(controller_host, controller_port)
@@ -1144,6 +1146,7 @@ local function start(controller_host, controller_port)
     step_into = true -- start with step command
     return true
   else
+    off()
     print(("Could not connect to %s:%s: %s")
       :format(controller_host, controller_port, err or "unknown error"))
   end
@@ -1245,7 +1248,7 @@ local function on()
   end
 end
 
-local function off()
+function off()
   if not (isrunning() and server) then return end
 
   -- main is set to true under Lua5.2 for the "main" chunk.
@@ -1281,6 +1284,7 @@ local function handle(params, client, options)
   local print = verbose and (type(verbose) == "function" and verbose or print) or function() end
   local file, line, watch_idx
   local _, _, command = string.find(params, "^([a-z]+)")
+  ::retry::
   if command == "run" or command == "step" or command == "out"
   or command == "over" or command == "exit" then
     client:send(string.upper(command) .. "\n")
@@ -1523,7 +1527,7 @@ local function handle(params, client, options)
     end
   elseif command == "suspend" then
     client:send("SUSPEND\n")
-  elseif command == "stack" then
+  elseif command == "stack" or command == "locals" then
     local opts = string.match(params, "^[a-z]+%s+(.+)$")
     client:send("STACK" .. (opts and " "..opts or "") .."\n")
     local resp = client:receive()
@@ -1539,8 +1543,16 @@ local function handle(params, client, options)
         print("Error in stack information: " .. stack)
         return nil, nil, stack
       end
-      for _,frame in ipairs(stack) do
-        print(mobdebug.line(frame[1], {comment = false}))
+      if command == "stack" then
+        for i,frame in ipairs(stack) do
+          print(i, " ---- ")
+          print("src", mobdebug.line(frame[1], {comment = false}))
+          print("vars", mobdebug.line(frame[2], {comment = false}))
+          print("?", mobdebug.line(frame[3], {comment = false}))
+          print("\n")
+        end
+      else
+        print(mobdebug.line(stack[1][2], {comment = false}))
       end
       return stack
     elseif status == "401" then
@@ -1560,6 +1572,7 @@ local function handle(params, client, options)
       local resp, err = client:receive()
       if not resp then
         print("Unknown error: "..err)
+        done()
         return nil, nil, "Debugger connection error: "..err
       end
       local _, _, status = string.find(resp, "^(%d+)%s+%w+%s*$")
@@ -1620,6 +1633,7 @@ local function handle(params, client, options)
     print("load <file>           -- loads a local file for debugging")
     print("reload                -- restarts the current debugging session")
     print("stack                 -- reports stack trace")
+    print("locals                -- prints current scope's locals and upvalues")
     print("output stdout <d|c|r> -- capture and redirect io stream (default|copy|redirect)")
     print("basedir [<path>]      -- sets the base path of the remote application, or shows the current one")
     print("done                  -- stops the debugger and continues application execution")
@@ -1629,8 +1643,8 @@ local function handle(params, client, options)
     if spaces then
       return nil, nil, "Empty command"
     else
-      print("Invalid command")
-      return nil, nil, "Invalid command"
+      command = "eval"
+      goto retry
     end
   end
   return file, line
@@ -1643,38 +1657,43 @@ local function listen(host, port)
 
   local socket = require "socket"
 
+  ::top::
+
   print("Lua Remote Debugger")
   print("Run the program you wish to debug")
 
-  while true do
 
-    local server = socket.bind(host, port)
-    local client = server:accept()
+  local server = socket.bind(host, port)
+  local client = server:accept()
 
-    client:send("STEP\n")
-    client:receive()
+  client:send("STEP\n")
+  client:receive()
 
-    local breakpoint = client:receive()
-    local _, _, file, line = string.find(breakpoint, "^202 Paused%s+(.-)%s+(%d+)%s*$")
-    if file and line then
-      print("Paused at file " .. file..":"..line )
-      print("Type 'help' for commands")
-    else
-      local _, _, size = string.find(breakpoint, "^401 Error in Execution (%d+)%s*$")
-      if size then
-        print("Error in remote application: ")
-        print(client:receive(size))
-      end
+  local breakpoint = client:receive()
+  local _, _, file, line = string.find(breakpoint, "^202 Paused%s+(.-)%s+(%d+)%s*$")
+  if file and line then
+    print("Paused at file " .. file..":"..line )
+    print("Type 'help' for commands")
+  else
+    local _, _, size = string.find(breakpoint, "^401 Error in Execution (%d+)%s*$")
+    if size then
+      print("Error in remote application: ")
+      print(client:receive(size))
     end
-
-    while true do
-      io.write("> ")
-      local file, line, err = handle(io.read("*line"), client)
-      if not file and err == false then break end -- completed debugging
-    end
-
-    client:close()
   end
+
+  while true do
+    io.write("> ")
+    local file, line, err = handle(io.read("*line"), client)
+    if not file and err == false then break end -- completed debugging
+  end
+
+  print("\n\nDebugging session ended\n\n\n")
+
+  client:close()
+  server:close()
+
+  goto top
 end
 
 local cocreate
@@ -1732,4 +1751,6 @@ mobdebug.onscratch = nil -- callback
 mobdebug.basedir = function(b) if b then basedir = b end return basedir end
 
 if gmod then genv.mobdebug = mobdebug end
+
+genv.DEBUG = mobdebug.start
 return mobdebug
