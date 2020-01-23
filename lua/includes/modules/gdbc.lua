@@ -47,7 +47,7 @@ local function log(identifier, ...)
 	file.Append("query_log.txt", str)
 end
 
-GDBC_LOG = true
+GDBC_LOG = false
 local traceback = ""
 
 local Query =
