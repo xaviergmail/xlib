@@ -20,6 +20,31 @@
  * THE SOFTWARE.
 ]]
 
+
+--[[
+
+You can change the endianness at any point during the format string by using
+> for big endian
+< for little endian (default)
+
+Types:
+
+"b" a signed char.
+"B" an unsigned char.
+"h" a signed short (2 bytes).
+"H" an unsigned short (2 bytes).
+"i" a signed int (4 bytes).
+"I" an unsigned int (4 bytes).
+"l" a signed long (8 bytes).
+"L" an unsigned long (8 bytes).
+"f" a float (4 bytes).
+"d" a double (8 bytes).
+"s" a zero-terminated string.
+"cn" a sequence of exactly n chars corresponding to a single Lua string.
+
+]]
+
+
 local unpack = table.unpack or unpack
 
 struct = {}
