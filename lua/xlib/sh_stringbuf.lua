@@ -1,6 +1,20 @@
 stringbuf = {}
 stringbuf.mt = {__index=stringbuf}
 
+function string.hexdump(buf)
+	local s = ""
+	for byte=1, #buf, 16 do
+		local chunk = buf:sub(byte, byte+15)
+		s = s .. (string.format('%08X  ',byte-1))
+		chunk:gsub('.', function (c) s = s .. (string.format('%02X ',string.byte(c))) end)
+		s = s .. (string.rep(' ',3*(16-#chunk)))
+		s = s .. (' '..chunk:gsub('%c','.').."\n")
+	end
+
+	return s
+end
+
+
 local function u(format)
 	return function(data)
 		return struct.unpack(format, data)
