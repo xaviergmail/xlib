@@ -31,7 +31,7 @@ function table.StoreKeys(src, key)
 end
 
 -- The following allows you to safely pack varargs while retaining nil values
-table.NIL = table.NIL or setmetatable({}, {__tostring=function() return "nil placeholder" end})
+table.NIL = table.NIL or setmetatable({}, {__tostring=function() return "nil" end})
 function table.PackNil(...)
 	local t = {}
 	for i=1, select("#", ...) do
