@@ -1,4 +1,31 @@
+TYPE_DATA = 105  -- Random magic number
+TYPE_DATAMT = TYPE_DATAMT or { __tostring = function(t) return t.str end }
+
+function net.MakeData(str)
+	return setmetatable({str=str}, TYPE_DATAMT)
+end
+
+local genv = _G
+local fenv = setmetatable({
+	TypeID = function(val)
+		if getmetatable(val) == TYPE_DATAMT then
+			return TYPE_DATA
+		end
+
+		return genv.TypeID(val)
+	end,
+}, {__index=_G, __newindex=_G})
+
+XLIB.PostInitialize(function()
+	setfenv(net.WriteType, fenv)
+	setfenv(net.ReadType, fenv)
+end)
+
 function net.WriteCompressed(str)
+	if getmetatable(str) == TYPE_DATAMT then
+		str = tostring(str)
+	end
+
 	local compressed = util.Compress(str)
 	local len = #(compressed or {})
 
@@ -16,3 +43,6 @@ function net.ReadCompressed()
 
 	return util.Decompress(data)
 end
+
+net.WriteVars[TYPE_DATA] = function(t, v) net.WriteUInt(t, 8) net.WriteCompressed(v) end
+net.ReadVars[TYPE_DATA] = function() return net.ReadCompressed() end
