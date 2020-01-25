@@ -30,7 +30,7 @@ function print(...)
     end
 
     if info.what != "C" then
-        MsgC(fileColors[fname], fname..':'..info.currentline.."/"..info.linedefined, "\t", SPrint(...).."\n")
+        MsgC(fileColors[fname], fname..':'..info.currentline.."/"..info.linedefined, "\t", color_white, SPrint(...).."\n")
     else
         OldPrint(...)
     end
