@@ -807,6 +807,18 @@ local function proccessException(err, stack, extra, ply)
 	return payload.event_id;
 end
 
+--
+--    Reporting Functions
+--
+---
+-- Process & upload any error
+-- @param err Error message
+-- @param tbl[opt] table containing any additional information
+-- @return The generated event ID
+function ReportError(err, info)
+	return processException(err, info)
+end
+
 ---
 -- The gm_luaerror hook at the heart of this module
 -- @param is_runtime If this error was a compile error or a runtime error. Largely irrelevent.

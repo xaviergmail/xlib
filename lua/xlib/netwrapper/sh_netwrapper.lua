@@ -49,7 +49,7 @@ local PLAYER = FindMetaTable( "Player" )
 -- Examples:
 -- Value:  0 :: the client can send successive requests as soon as they want to
 -- Value: >0 :: the client can send successive requests only after the specified delay has elapsed
-netwrapper.Delay      = CreateConVar( "netwrapper_request_delay", 5, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ), "The number of seconds before a client can send a net request to the server"  )
+netwrapper.Delay      = CreateConVar( "netwrapper_request_delay", 1, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ), "The number of seconds before a client can send a net request to the server"  )
 
 -- This is the total amount of requests a client can send to the server when they are asking for
 -- a value at the given key from an entity.
