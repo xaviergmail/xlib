@@ -105,6 +105,10 @@ function XLIB.Test(name, test)
 			Err(err)
 			testData.status = XLIB.Tests.FAILED
 			XLIB.Tests.Errored[name] = true
+
+			if sentry then
+				sentry.ReportError("Server startup blocked by failed test " .. name, { err=err })
+			end
 		end
 	end
 
