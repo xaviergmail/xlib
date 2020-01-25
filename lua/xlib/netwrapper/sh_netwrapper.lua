@@ -503,13 +503,21 @@ end
 --	 the next entity to use the same index does not use the first entity's data
 --	 and become corrupted.
 --]]--
-function netwrapper.ClearData( id )
-	netwrapper.ents[ id ]     = nil
-	netwrapper.requests[ id ] = nil
-	netwrapper.clients[ id ]  = nil
-	netwrapper.hooks[ id ]    = nil
 
-	if ( SERVER ) then
+local cleared = false
+local function clear( list, id )
+	cleared = list[ id ] != nil
+	list[ id ] = nil
+end
+
+function netwrapper.ClearData( id )
+	cleared = false
+	clear( netwrapper.ents, id )
+	clear( netwrapper.requests, id )
+	clear( netwrapper.clients, id )
+	clear( netwrapper.hooks, id )
+
+	if ( SERVER and cleared ) then
 		net.Start( "NetWrapperClear" )
 			net.WriteUInt( id, 32 )
 		net.Broadcast()

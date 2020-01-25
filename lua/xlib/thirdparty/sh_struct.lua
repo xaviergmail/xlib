@@ -20,6 +20,32 @@
  * THE SOFTWARE.
 ]]
 
+
+--[[
+
+You can change the endianness at any point during the format string by using
+> for big endian
+< for little endian (default)
+
+Types:
+
+"b" a signed char.
+"B" an unsigned char.
+"h" a signed short (2 bytes).
+"H" an unsigned short (2 bytes).
+"i" a signed int (4 bytes).
+"I" an unsigned int (4 bytes).
+"l" a signed long (8 bytes).
+"L" an unsigned long (8 bytes).
+"f" a float (4 bytes).
+"d" a double (8 bytes).
+"s" a zero-terminated string.
+"cn" a sequence of exactly n chars corresponding to a single Lua string.
+"z" a sequence of variable chars corresponding to a single Lua string.
+
+]]
+
+
 local unpack = table.unpack or unpack
 
 struct = {}
@@ -108,6 +134,24 @@ function struct.pack(format, ...)
         table.insert(stream, str:sub(1, length))
       end
       i = i + n:len()
+    elseif opt == 'z' then
+      local n = 4
+      local str = tostring(table.remove(vars, 1))
+
+      local bytes = {}
+      local len = str:len()
+      for j = 1, n do
+        table.insert(bytes, string.char(len % (2 ^ 8)))
+        len = math.floor(len / (2 ^ 8))
+      end
+
+      if not endianness then
+        table.insert(stream, string.reverse(table.concat(bytes)))
+      else
+        table.insert(stream, table.concat(bytes))
+      end
+
+      table.insert(stream, str)
     end
   end
 
@@ -190,6 +234,27 @@ function struct.unpack(format, stream)
       table.insert(vars, stream:sub(iterator, iterator + tonumber(n)-1))
       iterator = iterator + tonumber(n)
       i = i + n:len()
+    elseif opt == 'z' then
+      local n = 4
+      local signed = false
+
+      local len = 0
+      for j = 1, n do
+        local byte = string.byte(stream:sub(iterator, iterator))
+        if endianness then
+          len = len + byte * (2 ^ ((j - 1) * 8))
+        else
+          len = len + byte * (2 ^ ((n - j) * 8))
+        end
+        iterator = iterator + 1
+      end
+
+      if signed and len >= 2 ^ (n * 8 - 1) then
+        len = len - 2 ^ (n * 8)
+      end
+
+      table.insert(vars, stream:sub(iterator, iterator + tonumber(len)-1))
+      iterator = iterator + tonumber(len)
     end
   end
 

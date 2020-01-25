@@ -171,7 +171,7 @@ hook.Add("Initialize", "xloader", function()
 			data = data .. struct.pack("i", 0) .. ldatat:rep(#files)
 			data = data .. struct.pack("I", util.CRC(data))
 
-			local fname = prefix.."/xloader_cslua-"..CurTime()..".dat"
+			local fname = prefix.."/xloader_cslua-"..SysTime()..".dat"
 			local f = file.Open(fname, "wb", "DATA")
 			f:Write(data)
 			f:Close()

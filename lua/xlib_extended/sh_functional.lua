@@ -30,13 +30,36 @@ f.toString = function (v)
 	return tostring (v)
 end
 
-f.apply  = function (f, ...)
-	local args = {...}
-	return function (...)
-		local t = table.Copy(args)
-		table.Add(t, {...})
-		return f (unpack(t))
+f.apply  = function (fn, ...)
+	local args = {}
+	local n1 = select('#', ...)
+	for i=1, n1 do
+		args[i] = select(i, ...)
 	end
+
+	return function (...)
+		local t = {}
+
+		local n = 0
+		for k, v in ipairs(args) do
+			n = n + 1
+			t[n] = v
+		end
+
+		local n2 = select('#', ...)
+		for i=1, n2 do
+			t[n + i] = select(i, ...)
+		end
+
+		return fn(unpack(t))
+	end
+end
+
+f.partial = function(func, ...)
+    local args = {...}
+    return function(...)
+        return func(unpack(table.Add( args, {...})))
+    end
 end
 
 f.call   = function (f, ...) return f (...) end

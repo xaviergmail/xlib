@@ -73,6 +73,7 @@ end
 hook.Add("ResolutionChanged", "ResolutionChanged_UIUtil_Padding", function()
 	padding = ScreenScale(5)
 end)
+hook.Run("ResolutionChanged")
 
 local progressCols = {}
 local hue = {val=0}
@@ -87,7 +88,6 @@ function ProgressColor(scalar)
 end
 
 _R.Panel.RxPanelMeta = _R.Panel.RxPanelMeta or {}
-_R.Panel._OnRemove = _R.Panel._OnRemove or _R.Panel.OnRemove or NOOP
 
 local function IsRxSubscriptions(tbl)
 	return tbl and istable(tbl) and getmetatable(tbl) == _R.Panel.RxPanelMeta
@@ -97,13 +97,25 @@ function _R.Panel:SetupRx(tbl)
 	self:CleanupRx()
 	self.Subscriptions = setmetatable(tbl or {}, _R.Panel.RxPanelMeta)
 
-	self._OnRemove = self._OnRemove or self.OnRemove or NOOP
+	if self.OnRemove and not self._RxOnRemove then
+		self._RxOnRemove = self.OnRemove
+	end
+
 	self.OnRemove = function(this)
+		this.OnRemove = nil
+
+		if this._RxRemoved then return end
+		this._RxRemoved = true
+
 		if IsRxSubscriptions(this.Subscriptions) then
 			this:CleanupRx()
 		end
 
-		return this:_OnRemove()
+		local onRemove = this._RxOnRemove
+		if onRemove then
+			this._RxOnRemove = nil
+			onRemove(this)
+		end
 	end
 end
 

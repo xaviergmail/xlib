@@ -1,0 +1,1 @@
+-- This is a dummy file that gets AddCSLuaFile'd so we can check file.Exists in autorun on client

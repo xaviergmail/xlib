@@ -13,11 +13,7 @@ XLIB.Tests.SUCCESS = 3
 XLIB.Tests.FAILED = 4
 
 local function log(col, ...)
-	local s = "XLib Tests: "
-	for k, v in ipairs({...}) do
-		s = s .. tostring(v) .. " "
-	end
-
+	local s = SPrint("XLib Tests: ", ...)
 	MsgC(col, s .. "\n")
 end
 

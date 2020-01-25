@@ -36,7 +36,7 @@ local DB_mt =
 
 if not getmetatable(DB) then setmetatable(DB, DB_mt) end
 
-file.Write("query_log.txt", "")
+file.Append("query_log.txt", "\n\n\n\n"..util.DateStamp().."\n")
 local concat = table.concat
 local function log(identifier, ...)
 	local args = {...}
@@ -150,7 +150,7 @@ function Query:run(...)
 	end
 
 	function query.onError(q, err, sql)
-	 	local args = {err, sql}
+	 	local args = {err=err, sql=sql, traceback=traceback}
  		log(id, "FAILED:\n"..SPrintTable(args).."\n")
  		self:onFailure(err, sql, traceback)
 	end
