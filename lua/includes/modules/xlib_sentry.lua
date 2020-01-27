@@ -795,7 +795,7 @@ end
 -- @param extra Any additional context for the error
 -- @param[opt] ply Player object of the client the error occurred on
 -- @return The generated event ID
-local function proccessException(err, stack, extra, ply)
+local function processException(err, stack, extra, ply)
 	if (not extra) then
 		extra = {};
 	end
@@ -841,7 +841,7 @@ local function OnLuaError(is_runtime, rawErr, file, lineno, err, stack)
 		}
 	end
 
-	proccessException(err, stack);
+	processException(err, stack);
 end
 
 ---
@@ -865,7 +865,7 @@ local function OnClientLuaError(ply, rawErr, file, lineno, err, stack)
 		}
 	end
 
-	proccessException(err, stack, nil, ply);
+	processException(err, stack, nil, ply);
 end
 
 
@@ -884,7 +884,7 @@ function CaptureException(err, extra)
 
 	err = stripFileData(err, stack);
 
-	return proccessException(err, stack, extra);
+	return processException(err, stack, extra);
 end
 
 ---
@@ -900,7 +900,7 @@ local function xpcallCB(err)
 
 	local msg = stripFileData(err, stack);
 
-	proccessException(msg, stack);
+	processException(msg, stack);
 
 	-- Return the unmodified error
 	return err;
