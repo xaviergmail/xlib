@@ -412,7 +412,7 @@ local function sentrifyStack(stack)
 
 	local ret = {}
 	for i, frame in ipairs(stack) do
-		if istable(frame) then
+		if type(frame) == "table" then
 			ret[i] = {
 				filename = frame["source"]:sub(2),
 				["function"] = frame["name"] or "<unknown>",
