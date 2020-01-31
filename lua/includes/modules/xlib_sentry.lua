@@ -412,12 +412,14 @@ local function sentrifyStack(stack)
 
 	local ret = {}
 	for i, frame in ipairs(stack) do
-		ret[i] = {
-			filename = frame["source"]:sub(2),
-			["function"] = frame["name"] or "<unknown>",
-			module = modulify(frame["source"]),
-			lineno = frame["currentline"],
-		}
+		if istable(frame) then
+			ret[i] = {
+				filename = frame["source"]:sub(2),
+				["function"] = frame["name"] or "<unknown>",
+				module = modulify(frame["source"]),
+				lineno = frame["currentline"],
+			}
+		end
 	end
 	return { frames = ret };
 end
