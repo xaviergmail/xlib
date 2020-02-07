@@ -75,7 +75,9 @@ end
 
 local function include_print(_include)
 	return function(...)
-		log("   - Including", ...)
+		if IsTestServer and IsTestServer() and (SERVER or file.Exists("XLIB_LOADPRINT", "MOD")) then
+			log("   - Including", ...)
+		end
 		_include(...)
 	end
 end
