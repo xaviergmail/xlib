@@ -475,7 +475,7 @@ local GAMEMODE_BLAME_PATTERN = "^gamemodes/([^/]+)/";
 -- @return An array of tags in sentry format
 local function calculateBlame(stack)
 	for _, frame in pairs(stack) do
-		if (frame["source"] ~= "=[C]") then
+		if (type(frame) == "table" and frame["source"] ~= "=[C]") then
 			local source = frame["source"]:sub(2);
 
 			local wsname, wsid = luaerror.FindWorkshopAddonFileOwner(source);
