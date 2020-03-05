@@ -65,6 +65,9 @@ function XLIB.Test(name, test)
 
 			testData.failReason = reason
 			Err("Failed - ", fmt)
+			if sentry then
+				sentry.ReportError("Server startup blocked by failed test " .. name .. ": " .. reason, {}, { err=err })
+			end
 
 			if stra then
 				local stralen, strblen = stra:len(), strb:len()
@@ -107,7 +110,7 @@ function XLIB.Test(name, test)
 			XLIB.Tests.Errored[name] = true
 
 			if sentry then
-				sentry.ReportError("Server startup blocked by failed test " .. name, { err=err })
+				sentry.ReportError("Server startup blocked by ERRORED test " .. name, {}, { err=err })
 			end
 		end
 	end

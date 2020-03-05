@@ -13,7 +13,7 @@ local function OnLuaError(is_runtime, rawErr, file, lineno, err, stack)
 	XLIB.StartupErrors[rawErr] = true
 
 	if sentry then
-		sentry.ReportError("Server startup blocked by error " .. rawErr, {rawErr=rawErr, file=file, lineno=lineno, err=err, stack=stack})
+		sentry.ReportError("Server startup blocked by error " .. rawErr, stack, {rawErr=rawErr, file=file, lineno=lineno, err=err, stack=stack})
 	end
 end
 
