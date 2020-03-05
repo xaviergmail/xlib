@@ -59,6 +59,7 @@ local debug = debug
 local print = print;
 local PrintTable = PrintTable;
 local SPrintTable = SPrintTable;
+local XLIB = XLIB;
 
 local g = _G;
 module("sentry");
@@ -398,6 +399,8 @@ end
 -- @param stack Lua stacktrace in debug.getinfo style
 -- @return A reversed stacktrace with different field names
 local function sentrifyStack(stack)
+	if #stack == 0 then return {} end
+
 	-- Sentry likes stacks in the oposite order to lua
 	stack = table.Reverse(stack);
 
@@ -475,7 +478,7 @@ local GAMEMODE_BLAME_PATTERN = "^gamemodes/([^/]+)/";
 -- @return An array of tags in sentry format
 local function calculateBlame(stack)
 	for _, frame in pairs(stack) do
-		if (type(frame) == "table" and frame["source"] ~= "=[C]") then
+		if (type(frame) == "table" and frame["source"] and frame["source"] ~= "=[C]") then
 			local source = frame["source"]:sub(2);
 
 			local wsname, wsid = luaerror.FindWorkshopAddonFileOwner(source);
@@ -670,7 +673,9 @@ local function buildPayload(err, stacktrace, extra, ply)
 	table.Merge(txn, extra)
 
 	local tags = getTags(txn);
-	table.Add(tags, calculateBlame(stacktrace));
+	if stacktrace then
+		table.Add(tags, calculateBlame(stacktrace));
+	end
 
 	tags["Realm"] = ply and "CLIENT" or "SERVER"
 
@@ -698,7 +703,7 @@ local function buildPayload(err, stacktrace, extra, ply)
 		exception = {{
 			type = "error",
 			value = err,
-			stacktrace = sentrifyStack(stacktrace),
+			stacktrace = stacktrace and sentrifyStack(stacktrace) or nil,
 		}},
 		modules = DetectedModules,
 		contexts = getContexts(txn),
@@ -757,6 +762,7 @@ local function SendToServer(payload)
 			local result = util.JSONToTable(body) or {};
 
 			if (detectRateLimiting(code, headers)) then
+				WriteLog("We are being rate limited")
 				return;
 			elseif (code ~= 200) then
 				local error = headers["X-Sentry-Error"] or result["error"];
@@ -804,7 +810,15 @@ local function processException(err, stack, extra, ply)
 
 	local payload = buildPayload(err, stack, extra, ply);
 
-	SendToServer(payload);
+	if not g.GAMEMODE then
+		XLIB.PostInitialize(function()
+			g.timer.Simple(60, function()
+				SendToServer(payload);
+			end)
+		end)
+	else
+		SendToServer(payload);
+	end
 
 	return payload.event_id;
 end
