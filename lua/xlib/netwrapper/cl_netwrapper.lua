@@ -114,6 +114,7 @@ end )
 --]]--
 hook.Add( "OnEntityCreated", "NetWrapperSync", function( ent )
 	local id = ent:NWIndex()
+	netwrapper.RemoveNetRequests( id )
 
 	for key, value in pairs( netwrapper.GetNetVars( id ) ) do
 		ent:SetNetVar( key, value, true )
