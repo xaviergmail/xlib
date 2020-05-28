@@ -41,7 +41,7 @@ MAP.Directories = {}
 
 function MAP:Register(key, default)
 	if self.__defaults[key] != nil then
-		ErrorNoHalt("Warning: Registering key twice: "..tostring(key).."\n")
+		XLIB.Warn("Warning: Registering key twice: "..tostring(key).."\n")
 	end
 
 	self.__defaults[key] = default
