@@ -175,19 +175,26 @@ function MAP:Load(dir)
 		end
 	end)
 
-	local hooks = reset()
+	local realms = {}
 
-	tryServer "sv_hooks.lua"
+	realms.sh = reset()
 	tryShared "sh_hooks.lua"
+
+	realms.sv = reset()
+	tryServer "sv_hooks.lua"
+
+	realms.cl = reset()
 	tryClient "cl_hooks.lua"
 
-	if GAMEMODE then
-		ProtectedCall(hooks.Initialize)
-		ProtectedCall(hooks.InitPostEntity)
-	end
+	for realm, hooks in pairs(realms) do
+		if GAMEMODE then
+			ProtectedCall(hooks.Initialize)
+			ProtectedCall(hooks.InitPostEntity)
+		end
 
-	for k, v in pairs(hooks) do
-		hook.Add(k, "HK_Map_"..MAP:GetName().."_"..k, v)
+		for k, v in pairs(hooks) do
+			hook.Add(k, "HK_Map_"..MAP:GetName().."_"..k.."_"..realm, v)
+		end
 	end
 end
 
