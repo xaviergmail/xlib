@@ -147,6 +147,31 @@ schema "darkrp"
             -- -----------------------------------------------------
             ALTER TABLE `csidarkrp`.`player_info` MODIFY `name` VARCHAR(64);
         ]];
+
+    -- Support for function-based migration for additional logic
+    migration (3) (function(db, callback)
+        db()
+            :queryraw("SELECT VERSION() AS `version`")
+                :result(function(q, row)
+                    if row.version:lower():find("mariadb") then
+                        return "alter"
+                    end
+                end)
+
+            :queryraw "alter" [[
+                ALTER TABLE `csidarkrp`.`player_inventory` ADD SYSTEM VERSIONING;
+            ]]
+
+            :success(function(q)
+                callback(true)
+            end)
+
+            :fail(function(q, err, sql, traceback)
+                callback(false, "Migration SQL error occurred: "..err)
+            end)
+
+            :exec()
+    end);
 }
 ```
 
