@@ -724,17 +724,33 @@ function perform_migrations(db)
 
 	function execute_migration(id)
 	    log("Running Migration", id)
-	    db()
-	        :queryrawall (db.migrations[id])
-	            :success(function()
-	            	log("Migration query successful: ", id)
-	                return "updateDatabaseVersion", id
-	            end)
+	    local action = db.migrations[id]
+	    if isstring(action) then
+		    db()
+		        :queryrawall (db.migrations[id])
+		            :success(function()
+		            	log("Migration query successful: ", id)
+		                return "updateDatabaseVersion", id
+		            end)
 
-	        :query "updateDatabaseVersion" (db.config.updateDatabaseVersion)
-		        :success(on_migration_completed)
+		        :query "updateDatabaseVersion" (db.config.updateDatabaseVersion)
+			        :success(on_migration_completed)
 
-	        :exec()
+		        :exec()
+	    elseif isfunction(action) then
+	    	action(db, function(success, reason)
+	    		if success then
+	    			db()
+				        :query (db.config.updateDatabaseVersion(id))
+					        :success(on_migration_completed)
+				        :exec()
+
+		            log("Migration function successful: ", id)
+	    		else
+	    			error("Migration "..id.."failed: "..reason)
+	    		end
+		    end)
+	    end
 	end
 
 	check_migrations(0)
