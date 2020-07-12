@@ -11,6 +11,8 @@ if not mysqloo then
     require("mysqloo")
 end
 
+local fakelag = CreateConVar("gdbc_fakelag", "0", FCVAR_NONE, "Sets the latency in seconds to delay MySQL callbacks by", 0, 5000)
+
 local DB =
 {
 	__schemas = _G.DB and _G.DB.__schemas or {}
@@ -150,9 +152,20 @@ function Query:run(...)
 	end
 
 	function query.onError(q, err, sql)
+		local e = err:lower()
+		if err:find("connection was killed") or err:find("connection was killed") then
+			ErrorNoHalt("GDBC: Connection to SQL server was lost. Re-running query: "..sql)
+			q:start()
+			return
+		end
+
 	 	local args = {err=err, sql=sql, traceback=traceback}
  		log(id, "FAILED:\n"..SPrintTable(args).."\n")
- 		self:onFailure(err, sql, traceback)
+ 		if fakelag:GetBool() then
+	 		timer.Simple(fakelag:GetInt()/1000, function() self:onFailure(err, sql, traceback) end)
+ 		else
+	 		self:onFailure(err, sql, traceback)
+	 	end
 	end
 
 	function query.onSuccess(q, data)
@@ -164,7 +177,11 @@ function Query:run(...)
 			end
 		end
 
-	 	self:onSuccess(data, q:lastInsert())
+	 	if fakelag:GetBool() then
+		 	timer.Simple(fakelag:GetInt()/1000, function() self:onSuccess(data, q:lastInsert()) end)
+	 	else
+		 	self:onSuccess(data, q:lastInsert())
+		 end
 	end
 
 	function query.onData(q, data)
@@ -459,6 +476,7 @@ local function connect(i)
 		Error("Database '"..i.database.."' - connection failed with username ".. i.user .."\n")
 	end
 
+	db:setAutoReconnect(true)
     db:connect()
 
 	return db
