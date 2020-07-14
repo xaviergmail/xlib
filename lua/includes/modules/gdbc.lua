@@ -153,8 +153,8 @@ function Query:run(...)
 
 	function query.onError(q, err, sql)
 		local e = err:lower()
-		if err:find("connection was killed") or err:find("connection was killed") then
-			ErrorNoHalt("GDBC: Connection to SQL server was lost. Re-running query: "..sql)
+		if e:find("connection was killed") or err:find("gone away") or err:find("can't connect") then
+			ErrorNoHalt("GDBC: Connection to SQL server was lost. ("..err..")\nRe-running query:\n"..sql)
 			q:start()
 			return
 		end
