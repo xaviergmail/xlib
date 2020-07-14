@@ -262,8 +262,8 @@ local function rateLimit(err)
 		block = true;
 	end
 
-	-- Limit reporting a specific error only once every 30 seconds
-	errHist[err] = RealTime() + 30;
+	-- Limit reporting a specific error only once every hour
+	errHist[err] = RealTime() + 60*60;
 
 	-- Clear error history to save up on RAM (stacktraces are big and accumulate over time)
 	for err, expires in pairs(errHist) do
@@ -627,7 +627,7 @@ local function getContexts(extra)
 			version = g["VERSIONSTR"],
 		},
 		app = {
-			app_start_time = math.floor(os.time() - SysTime()),
+			app_start_time = ISODate(math.floor(os.time() - SysTime())),
 		},
 		user = getUserContext(extra),
 	}
@@ -845,7 +845,7 @@ end
 -- @param stack The captured stack trace for the error. May be empty
 -- @return Nothing or you'll break everything
 local function OnLuaError(is_runtime, rawErr, file, lineno, err, stack)
-	if (not shouldReport(rawErr)) then
+	if (not shouldReport(rawErr) or rateLimit(err)) then
 		return;
 	end
 
@@ -870,7 +870,7 @@ end
 -- @param stack The captured stack trace for the error. May be empty
 -- @return Nothing or you'll break everything
 local function OnClientLuaError(ply, rawErr, file, lineno, err, stack)
-	if (not shouldReport(rawErr)) then
+	if (not shouldReport(rawErr) or rateLimit(err)) then
 		return;
 	end
 	if (#stack == 0) then
