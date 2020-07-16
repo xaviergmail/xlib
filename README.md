@@ -59,7 +59,8 @@ retrofitted for use with [MysqlOO](https://github.com/FredyH/MySQLOO) for ease o
 
 Some of the main features include:
 * Unique chaining control flow avoids callback hell
-* Prepared Statements
+* Prepared Statements (Actual prepared statements OR falls back to formatting the SQL query and sending it if `connect.usePreparedStatememts=false`)
+* MySQL Connection Pool (Set `connect.threads= >1`)
 * Database Versioning (Through a basic key-value `config` table added to each schema)
 * Schema Migrations (Players are not allowed to join until all migrations are complete!)
 
@@ -241,6 +242,9 @@ function CSIDB:InitPlayer(ply)
 
             hook.Run("CSIDB:PlayerReady", ply)
         end)
+
+        -- Enable logging the SQL queries sent from this particular chain only
+        :log()
 
         -- Execute the chain. This will start with the first sequential query.
         :exec()
