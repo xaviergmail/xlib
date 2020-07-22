@@ -8,6 +8,9 @@ GDBC = GDBC or {}
 
 local MySQLOO_MetaName = "MySQLOO table"
 
+-- Current context when calling _G.schema()
+local context = {}
+
 local function IsMySQLOODB(tbl)
 	local mt = istable(tbl) and getmetatable(tbl) or {}
 	return mt and istable(mt) and mt.MetaName == MySQLOO_MetaName
@@ -555,14 +558,17 @@ local migration_mt = { mtID = "migration" }
 local make_config_table, make_config_migration, perform_migrations
 local table_insert = table.insert
 local function schema(name)
+	context = {name=name}
 	return function(tbl)
 		table_insert(tbl, make_config_table())
 		table_insert(tbl, make_config_migration())
 
 		local _schema = {name=name, migrations={}, tables={}}
+		context.schema = _schema
 		for k, v in pairs(tbl) do
 			if IsMySQLOODB(v) then
 				_schema.database = v
+				context.database = v
 			elseif v then
 				if getmetatable(v) and getmetatable(v).mtID == migration_mt.mtID then
 					_schema.migrations[v.id] = v.query
@@ -576,65 +582,87 @@ local function schema(name)
 		end
 		setmetatable(_schema, schema_mt)
 		DB.__schemas[name] = _schema
+	end
+end
 
-		local db = _schema.database
+local function mysqloo_connect(connid, commitInterval, host, username, password, database, port, socket)
+	local ctx = context -- Keep a reference as the global gets overwritten
 
-		function db:prepareStatements(conn)
-			for tblName, tbl in pairs(_schema.tables) do
+	local db = mysqloo.connect(host, username, password, database, port, socket)
+	db:setAutoReconnect(true)
+	db.ConnectionID = connid
+	db.getLeastOccupiedDB = function() return db end
+
+	function db:onConnectionFailed(err)
+		Error("Database '"..ctx.connect.database.."'["..connid.."] - connection failed with username ".. ctx.connect.user .."\n")
+	end
+
+	if commitInterval then
+		local id = string.format("GDBC.TransactionCommit [%s][%s][%p]", ctx.name, tostring(connid), db)
+
+		local q = db:query([[
+			SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+			SET SESSION AUTOCOMMIT=0;
+		]])
+
+		function q:onSuccess() print(ctx.connect.database.."["..connid.."]: Initialized manual commit interval:", commitInterval) end
+		function q:onError(err) ErrorNoHalt(ctx.connect.database.."["..connid.."]: Errored: "..err.."\n") end
+
+		q:start()
+
+		timer.Create(id, commitInterval, 0, function()
+			if db:status() != DATABASE_CONNECTED then return end
+			if GDBC_LOG then
+				log(id, "Committing")
+			end
+			local q = db:query("COMMIT;")
+			q:start()
+		end)
+	end
+
+	function db:onConnected(err)
+		db.usePreparedStatements = ctx.connect.usePreparedStatements
+
+		local str = "!"
+		if self.usePreparedStatements then
+			for tblName, tbl in pairs(ctx.schema.tables) do
 				for name, sql in pairs(tbl.__queries) do
-					tbl.__prepared[name][conn.ConnectionID] = conn:prepare(sql)
+					tbl.__prepared[name][self.ConnectionID] = self:prepare(sql)
 				end
 			end
 		end
 
-		db:connect()
+		print(ctx.connect.database.."["..connid.."]: Connected"..str)
 	end
+
+	db:connect()
+
+	return db
 end
 
 local function connect(i)
+	context.connect = i
+
 	if !mysqloo then return end
 
 	local threads = i.threads or 1
+	local commitInterval = false
+
+	if (tonumber(i.commitInterval) or 0) > 0 then
+		commitInterval = tonumber(i.commitInterval)
+	end
 
 	local db
 	if threads > 1 then
-		db = mysqloo.CreateConnectionPool2(threads, i.host, i.user, i.pass, i.database, i.port)
+		db = mysqloo.CreateConnectionPool2(threads, commitInterval, i.host, i.user, i.pass, i.database, i.port)
 	else
-		db = mysqloo.connect(i.host, i.user, i.pass, i.database, i.port)
-		db.ConnectionID = 1
-		db.getLeastOccupiedDB = function() return db end
+		db = mysqloo_connect(1, commitInterval, i.host, i.user, i.pass, i.database, i.port)
 	end
 
 	do
-		low = mysqloo.connect(i.host, i.user, i.pass, i.database, i.port)
-		low.ConnectionID = "low"
-		low.getLeastOccupiedDB = function() return low end
+		low = mysqloo_connect("low", commitInterval, i.host, i.user, i.pass, i.database, i.port)
 		db.low = low
 	end
-
-	for _, db in ipairs{db, db.low} do
-		db.usePreparedStatements = i.usePreparedStatements
-
-		function db:onConnected(err)
-			local pid = self.ConnectionID or 1
-
-			local str = "!"
-			if db.usePreparedStatements	then
-				db:prepareStatements(self)
-				str = " and using prepared statements!"
-			end
-
-			print(i.database.."["..pid.."]: Connected"..str)
-		end
-
-		function db:onConnectionFailed(err)
-			local pid = self.ConnectionID or 1
-			Error("Database '"..i.database.."'["..pid.."] - connection failed with username ".. i.user .."\n")
-		end
-
-		db:setAutoReconnect(true)
-	end
-
 	return db
 end
 
@@ -957,7 +985,7 @@ local poolMT = {
 	end
 }
 
-function mysqloo.CreateConnectionPool2(conCount, ...)
+function mysqloo.CreateConnectionPool2(conCount, commitInterval, ...)
 	if (conCount < 1) then
 		conCount = 1
 	end
@@ -966,7 +994,7 @@ function mysqloo.CreateConnectionPool2(conCount, ...)
 	newPool._Connections = {}
 
 	for i = 1, conCount do
-		local db = mysqloo.connect(...)
+		local db = mysqloo_connect(i, commitInterval, ...)
 		db.ConnectionID = i
 		table_insert(newPool._Connections, db)
 	end
