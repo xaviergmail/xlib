@@ -1,3 +1,9 @@
+-- TODO: Handle promising queries running on Shutdown
+-- Implementation:
+--  - Currently running query list (to :wait())
+--  - Currently running or queued up query sequences
+--  - :wait() on every running query and subsequent queries
+
 GDBC = GDBC or {}
 
 local MySQLOO_MetaName = "MySQLOO table"
@@ -373,6 +379,17 @@ end
 function QuerySequence:_procedure_sw(str, func)
 	if not str then return end
 	self.__procedures[str] = func
+	return self
+end
+
+function QuerySequence:_low_()
+	if self.database.low then
+		self.database = self.database.low
+	else
+		XLIB.WarnTrace("Query sequence tried to execute on low priority queue but did not ")
+	end
+
+	return self
 end
 
 function QuerySequence:_exec_sw(str, data)
@@ -386,7 +403,22 @@ function QuerySequence:_exec_sw(str, data)
 		args = self.data.args
 	end
 
-	self:proceed(str, table.UnpackNil(args))
+	if self.throttle_data then
+		XLIB.Throttle(self.throttle_data.identifier, self.throttle_data.time,
+			f.apply(self.proceed, self, str, table.UnpackNil(args))
+		)
+	else
+		self:proceed(str, table.UnpackNil(args))
+	end
+end
+
+function QuerySequence:_throttle_(identifier, time)
+	if identifier == false then
+		self.throttle_data = nil
+	else
+		self.throttle_data = {identifier=identifier, time=time}
+	end
+	return self
 end
 
 function QuerySequence:_get_(k)
@@ -573,26 +605,35 @@ local function connect(i)
 		db.getLeastOccupiedDB = function() return db end
 	end
 
-	db.usePreparedStatements = i.usePreparedStatements
+	do
+		low = mysqloo.connect(i.host, i.user, i.pass, i.database, i.port)
+		low.ConnectionID = "low"
+		low.getLeastOccupiedDB = function() return low end
+		db.low = low
+	end
 
-	function db:onConnected(err)
-		local pid = self.ConnectionID or 1
+	for _, db in ipairs{db, db.low} do
+		db.usePreparedStatements = i.usePreparedStatements
 
-		local str = "!"
-		if db.usePreparedStatements	then
-			db:prepareStatements(self)
-			str = " and using prepared statements!"
+		function db:onConnected(err)
+			local pid = self.ConnectionID or 1
+
+			local str = "!"
+			if db.usePreparedStatements	then
+				db:prepareStatements(self)
+				str = " and using prepared statements!"
+			end
+
+			print(i.database.."["..pid.."]: Connected"..str)
 		end
 
-		print(i.database.."["..pid.."]: Connected"..str)
-	end
+		function db:onConnectionFailed(err)
+			local pid = self.ConnectionID or 1
+			Error("Database '"..i.database.."'["..pid.."] - connection failed with username ".. i.user .."\n")
+		end
 
-	function db:onConnectionFailed(err)
-		local pid = self.ConnectionID or 1
-		Error("Database '"..i.database.."'["..pid.."] - connection failed with username ".. i.user .."\n")
+		db:setAutoReconnect(true)
 	end
-
-	db:setAutoReconnect(true)
 
 	return db
 end

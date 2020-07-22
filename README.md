@@ -246,6 +246,13 @@ function CSIDB:InitPlayer(ply)
         -- Enable logging the SQL queries sent from this particular chain only
         :log()
 
+        -- Execute this query sequence on the single-threaded low-priority queue
+        :low()
+
+        -- Used to delay flushing of write-intensive queries to the latest
+        -- dataset based on unique_id after max of time_in_seconds
+        :throttle("unique_id", time_in_seconds)
+
         -- Execute the chain. This will start with the first sequential query.
         :exec()
 end
