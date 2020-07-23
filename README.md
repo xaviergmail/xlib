@@ -8,22 +8,18 @@ A collection of snippets and tools for Garry's Mod development. (Short for Xavie
 
 This aims to solve this issue by allowing you to store all of your credentials in a schemaless `GarrysMod/garrysmod/CREDENTIAL_STORE`
 [Valve VDF](https://developer.valvesoftware.com/wiki/KeyValues#File_Format) file
-in the root of your Garry's Mod installation.
+in the root of your Garry's Mod installation. In turn, this allows you to maintain separate configuration files for each environment (development, staging, production).
+
+The VDF file is exposed as the global `CREDENTIALS` table in Lua.
 
 #### CREDENTIAL_STORE file
 ```
 credentials
 {
-    steamapi "STEAM_API_KEY"
-    development_mode "1"
-    extended "1"
-    production "0"
-    distalk
-    {
-        url "http://192.168.1.137:8080"
-        serverid "xaviers-dev"
-    }
-
+    // Here are the fields XLib uses
+    development_mode "1" // Makes IsTestServer() return true
+    extended "1"  // Enables parts of XLib that are meant to be for "internal use" AKA not guaranteed to not cause any conflicts outside of our environments.
+    production "0" // No particular use, for now. Slightly redundant, but you can use `CREDENTIALS.production` as a predicate in your code.
     mysql
     {
         cats_database
@@ -34,6 +30,12 @@ credentials
             pass "CatLover1546"
             port "3306"
         }
+    }
+
+    // You can also have any custom values here to configure your custom scripts.
+    example_script {
+        url "https://test-endpoint.com/"
+        apikey "some_api_key"
     }
 }
 ```
