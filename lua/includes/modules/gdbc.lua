@@ -611,11 +611,14 @@ local function mysqloo_connect(connid, commitInterval, host, username, password,
 		q:start()
 
 		timer.Create(id, commitInterval, 0, function()
-			if db:status() != DATABASE_CONNECTED then return end
+			if db:status() != mysqloo.DATABASE_CONNECTED then return end
 			if GDBC_LOG then
 				log(id, "Committing")
 			end
+
 			local q = db:query("COMMIT;")
+			function q:onError(err) ErrorNoHalt(ctx.connect.database.."["..connid.."]: Errored while committing: "..err.."\n") end
+
 			q:start()
 		end)
 	end
