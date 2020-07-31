@@ -229,15 +229,22 @@ function Query:run(...)
 	end
 
 	function query.onError(q, err, sql)
-		local e = err:lower()
-		if e:find("connection was killed") or err:find("gone away") or err:find("can't connect") then
+		local e = err:Trim():lower()
+		if e:match("connection was killed") or err:match("gone away") or err:match("can't connect") then
 			ErrorNoHalt("GDBC: Connection to SQL server was lost. ("..err..")\nRe-running query:\n"..sql)
 			q:start()
 			return
 		end
 
+		if e:match("wsrep has not yet prepared node for application use") then
+			hook.Run("GDBC:Error", err:Trim())
+		end
+
 	 	local args = {err=err, sql=sql, traceback=traceback}
- 		log(id, "FAILED:\n"..SPrintTable(args).."\n")
+	 	local str = "GDBC Query FAILED:\n"..SPrintTable(args).."\n"
+ 		log(id, str)
+ 		hook.Run("Log::Error", { text = str })
+
  		if fakedelay:GetBool() then
 	 		timer.Simple(fakedelay:GetInt()/1000, function() self:onFailure(err, sql, traceback) end)
  		else
