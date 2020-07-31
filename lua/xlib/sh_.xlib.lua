@@ -4,7 +4,7 @@ function XLIB.PostInitialize(fn)
 	if GAMEMODE then
 		fn()
 	else
-		hook.Add("Initialize", "XLIB.PostInitialize"..tostring(fn), fn)
+		hook.Add("Initialize", "XLIB.PostInitialize:"..tostring(fn), fn)
 	end
 end
 
@@ -12,7 +12,7 @@ function XLIB.PreInitialize(fn)
 	if GAMEMODE then
 		fn()
 	else
-		hook.Add("PostGamemodeLoaded", "XLIB.PreInitialize"..tostring(fn), fn)
+		hook.Add("PostGamemodeLoaded", "XLIB.PreInitialize:"..tostring(fn), fn)
 	end
 end
 
@@ -21,7 +21,7 @@ function XLIB.PostInitEntity(fn)
 	if XLIB.DidInitPostEntity then
 		fn()
 	else
-		hook.Add("InitPostEntity", "XLIB.PostInitialize"..tostring(fn), fn)
+		hook.Add("InitPostEntity", "XLIB.PostInitialize:"..tostring(fn), fn)
 	end
 end
 
