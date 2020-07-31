@@ -29,6 +29,18 @@ hook.Add("InitPostEntity", "XLIB.PostInitEntity", function()
 	XLIB.DidInitPostEntity = true
 end)
 
+function XLIB.OnFirstTick(fn)
+	if GAMEMODE then
+		fn()
+	else
+		local id = "XLIB.OnFirstTick:"..tostring(fn)
+		hook.Add("Tick", id, function()
+			hook.Remove("Tick", id)
+			fn()
+		end)
+	end
+end
+
 if CLIENT then
 	function XLIB.EnsureLocalPlayer(fn)
 		if IsValid(LocalPlayer()) then
