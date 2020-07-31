@@ -41,6 +41,18 @@ function XLIB.OnFirstTick(fn)
 	end
 end
 
+function XLIB.EnsureHTTP(fn)
+	if GAMEMODE then
+		fn()
+	else
+		local id = "XLIB.EnsureHTTP:"..tostring(fn)
+		hook.Add("HTTPReady", id, function()
+			hook.Remove("HTTPReady", id)
+			fn()
+		end)
+	end
+end
+
 if CLIENT then
 	function XLIB.EnsureLocalPlayer(fn)
 		if IsValid(LocalPlayer()) then

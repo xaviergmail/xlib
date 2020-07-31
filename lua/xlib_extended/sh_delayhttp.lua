@@ -58,6 +58,8 @@ local function process()
 	for _, cb in ipairs(requests) do
 		cb.func(table.UnpackNil(cb.args))
 	end
+
+	hook.Run("HTTPReady")
 end
 
 hook.Add("Tick", "xlib.delayhttprequests", function()
