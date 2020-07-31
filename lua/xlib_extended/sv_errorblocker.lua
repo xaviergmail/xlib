@@ -18,7 +18,7 @@ local function OnLuaError(is_runtime, rawErr, file, lineno, err, stack)
 end
 
 function XLIB.BlockStartup(reason)
-	OnLuaError(nil, reason)
+	OnLuaError(nil, reason, "", 0, reason, {})
 	XLIB.WarnTrace("Server startup join was blocked: "..reason)
 end
 
