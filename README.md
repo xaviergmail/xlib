@@ -452,3 +452,11 @@ end
 This library packages my fork of [netwrapper](https://github.com/xaviergmail/netwrapper).
 
 NetWrapper is a lightweight, bandwidth-focused wrapper around the existing `net` library. You can view its documentation [here](./lua/xlib/netwrapper) as well as examples [here](./lua/xlib/netwrapper/example.lua)
+
+
+### Contributing
+If you would like to contribute, feel free to create a pull request. As this is a personal project, I can't guarantee that every request will be merged. However, if it benefits the project, I will gladly consider it.
+
+I'm not enforcing any strict code guidelines as this project is already all over the place but please try to match the project's dominant style.
+
+If you would like to enable autorefresh support while modifying XLib files themselves, create an empty file named `XLIB_AUTOLOAD` inside the `garrysmod` directory.

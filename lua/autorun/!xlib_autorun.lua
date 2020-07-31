@@ -1,3 +1,6 @@
+-- If you want to modify XLib itself with autorefresh support,
+-- Create an empty `XLIB_AUTOLOAD` file in the garry's mod directory
+
 local clfile = "xlib/xlib_autorun_cl.lua"
 
 if SERVER then
