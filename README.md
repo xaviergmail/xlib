@@ -3,6 +3,22 @@ A collection of snippets and tools for Garry's Mod development. (Short for Xavie
 
 *TODO: LDoc documentation. This library is mostly limited to internal use, but is a dependency for some of my future releases.*
 
+
+- [XLIB](#xlib)
+  - [Credential Store](#credential-store)
+    - [Configuration](#configuration)
+    - [Lua Usage](#lua-usage)
+  - [GDBC](#gdbc)
+    - [Declarative Syntax](#declarative-syntax)
+    - [Control Flow](#control-flow)
+  - [XLoader](#xloader)
+  - [XLIB.Timer](#xlibtimer)
+  - [NetWrapper](#netwrapper)
+  - [XLIB Extended](#xlib-extended)
+    - [DevCommand](#devcommand)
+    - [gmod-sentry](#gmod-sentry)
+- [Contributing](#contributing)
+
 ## Credential Store
 ***Preamble:** Most Garry's Mod scripts configurations hardcode credentials. This is less than ideal for source controlled projects.*
 
@@ -12,7 +28,8 @@ in the root of your Garry's Mod installation. In turn, this allows you to mainta
 
 The VDF file is exposed as the global `CREDENTIALS` table in Lua.
 
-#### CREDENTIAL_STORE file
+### Configuration
+`CREDENTIAL_STORE.txt`
 ```
 credentials
 {
@@ -40,7 +57,7 @@ credentials
 }
 ```
 
-#### Lua Usage
+### Lua Usage
 ```lua
 require "credentialstore"
 
@@ -66,7 +83,8 @@ Some of the main features include:
 * Database Versioning (Through a basic key-value `config` table added to each schema)
 * Schema Migrations (Players are not allowed to join until all migrations are complete!)
 
-### Declarative Syntax for - Connection info, Queries, Migrations
+### Declarative Syntax
+For connection info, queries and migrations
 ```lua
 schema "darkrp"
 {
@@ -146,9 +164,9 @@ schema "darkrp"
         [[
             -- -----------------------------------------------------
             -- Steam updated their maximum display name length.
-            -- Update `csidarkrp`.`player_info`.`name` accordingly.
+            -- Update `csidarkrp`.`player_info`.`steamname` accordingly.
             -- -----------------------------------------------------
-            ALTER TABLE `csidarkrp`.`player_info` MODIFY `name` VARCHAR(64);
+            ALTER TABLE `csidarkrp`.`player_info` MODIFY `steamname` VARCHAR(64);
         ]];
 
     -- Support for function-based migration for additional logic
@@ -178,7 +196,7 @@ schema "darkrp"
 }
 ```
 
-### Easily Manageable query chaining control flow
+### Control Flow
 ```lua
 function CSIDB:InitPlayer(ply)
     local steamid = ply:SteamID()
@@ -271,6 +289,35 @@ function CSIDB:SaveDefaultInfo(player_id)
 
     return default_info
 end
+
+-- Workaround for GM.Think to get called even with no players on the server
+-- Required for MySQLOO Query callbacks to be processed.\
+-- Enable this if you want need to load information from the database
+-- before allowing player connections.
+RunConsoleCommand("sv_hibernate_think", "1")
+
+-- GDBC exposes two hooks, GDBC:InitSchemas and GDBC:Ready
+hook.Add("GDBC:Ready", "CSIDB:Ready", function()
+    -- The database has connected and migrations have all been successfully executed.
+    -- Execute any server initialization queries here
+end)
+
+
+hook.Add("GDBC:InitSchemas", "CSIDB:InitSchemas", function()
+    -- GDBC is ready to load schemas and start executing migrations.
+    -- GDBC.LoadSchema("path/to/schema.lua")
+
+    -- Note that GDBC.LoadSchema uses CompileFile internally.
+    -- This means that file paths are relative to the Lua mount path, NOT the current file!
+    -- This also means you should properly namespace these files to avoid conflicts.
+
+    -- e.g file in garrysmod/addons/my_cool_addon/lua/cool_addon/database/schema.lua
+    GDBC.LoadSchema("cool_addon/database/schema.lua")
+
+    -- e.g file in garrysmod/gamemodes/gm_name/gamemode/database/schema.lua
+    GDBC.LoadSchema((GM or GAMEMODE).FolderName .. "/gamemode/database/schema.lua")
+end)
+
 ```
 
 ## XLoader
@@ -279,7 +326,7 @@ end
 Some of the main features include:
 * Automatically `include()` and `AddCSLuaFile()` files in the specified directory
 * Auto-refresh aware [Upstream bug](https://github.com/Facepunch/garrysmod-issues/issues/935)
-* Predictable
+* Guaranteed predictable load order
 
 The include order is as follows:
 1. All `sh_*.lua` files for the current directory, sorted alphanumerically
@@ -380,6 +427,13 @@ Output
 [pairs vs ipairs vs for]  Finished in  0.91671
 ```
 
+## NetWrapper
+This library packages my fork of [netwrapper](https://github.com/xaviergmail/netwrapper).
+
+NetWrapper is a lightweight, bandwidth-focused wrapper around the existing `net` library. You can view its documentation [here](./lua/xlib/netwrapper) as well as examples [here](./lua/xlib/netwrapper/example.lua)
+
+
+
 ## XLIB Extended
 This is a part of XLIB disabled by default for use in packaged applications.
 To enable, simply set `extended "1"` in your `CREDENTIAL_STORE`
@@ -448,13 +502,7 @@ end
 ```
 
 
-### NetWrapper
-This library packages my fork of [netwrapper](https://github.com/xaviergmail/netwrapper).
-
-NetWrapper is a lightweight, bandwidth-focused wrapper around the existing `net` library. You can view its documentation [here](./lua/xlib/netwrapper) as well as examples [here](./lua/xlib/netwrapper/example.lua)
-
-
-### Contributing
+# Contributing
 If you would like to contribute, feel free to create a pull request. As this is a personal project, I can't guarantee that every request will be merged. However, if it benefits the project, I will gladly consider it.
 
 I'm not enforcing any strict code guidelines as this project is already all over the place but please try to match the project's dominant style.
