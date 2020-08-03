@@ -1,5 +1,5 @@
 getmetatable(NULL).ChatPrint = function(_, ...)
-	print(...)
+	MsgN("NULL:ChatPrint() ", ...)
 end
 
 local function concat(...)
