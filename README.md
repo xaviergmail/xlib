@@ -3,6 +3,22 @@ A collection of snippets and tools for Garry's Mod development. (Short for Xavie
 
 *TODO: LDoc documentation. This library is mostly limited to internal use, but is a dependency for some of my future releases.*
 
+
+- [XLIB](#xlib)
+  - [Credential Store](#credential-store)
+    - [Configuration](#configuration)
+    - [Lua Usage](#lua-usage)
+  - [GDBC](#gdbc)
+    - [Declarative Syntax](#declarative-syntax)
+    - [Control Flow](#control-flow)
+  - [XLoader](#xloader)
+  - [XLIB.Timer](#xlibtimer)
+  - [NetWrapper](#netwrapper)
+  - [XLIB Extended](#xlib-extended)
+    - [DevCommand](#devcommand)
+    - [gmod-sentry](#gmod-sentry)
+- [Contributing](#contributing)
+
 ## Credential Store
 ***Preamble:** Most Garry's Mod scripts configurations hardcode credentials. This is less than ideal for source controlled projects.*
 
@@ -12,7 +28,8 @@ in the root of your Garry's Mod installation. In turn, this allows you to mainta
 
 The VDF file is exposed as the global `CREDENTIALS` table in Lua.
 
-#### CREDENTIAL_STORE file
+### Configuration
+`CREDENTIAL_STORE.txt`
 ```
 credentials
 {
@@ -40,7 +57,7 @@ credentials
 }
 ```
 
-#### Lua Usage
+### Lua Usage
 ```lua
 require "credentialstore"
 
@@ -66,7 +83,8 @@ Some of the main features include:
 * Database Versioning (Through a basic key-value `config` table added to each schema)
 * Schema Migrations (Players are not allowed to join until all migrations are complete!)
 
-### Declarative Syntax for - Connection info, Queries, Migrations
+### Declarative Syntax
+For connection info, queries and migrations
 ```lua
 schema "darkrp"
 {
@@ -77,8 +95,51 @@ schema "darkrp"
         pass = CREDENTIALS.mysql.darkrp.pass,
         database = CREDENTIALS.mysql.darkrp.db,
         port = CREDENTIALS.mysql.darkrp.port,
-        threads = 2,
-        usePreparedStatements = true,
+        
+        --[=====================================================================[
+            Whether this database connection should use prepared statements.
+            
+            Before you enable this, ensure that all of your queries are
+            compatible for use within prepared statements.
+
+            https://mariadb.com/kb/en/prepare-statement/#permitted-statements/
+
+            If you would like to benefit from prepared statements while still
+            maintaining the ability to use statements not yet implemented,
+            use :queryraw() along with :prepare():
+
+            DB.schema_name
+                :queryraw(DB.schema_name.table_name.query_name:prepare(...))
+                :exec()
+
+        ]=====================================================================]
+        usePreparedStatements = false,
+
+        --[=====================================================================[
+            CAREFUL! Only queries contained within the same GDBC Query Sequence
+            are guaranteed to be executed in order with strong consistency.
+
+            In single-connection mode, initiating two query sequences one after
+            the other will guarantee that the first sequence will finish before
+            the second 
+
+            IF YOU'RE UNSURE WHAT THIS MEANS, LEAVE THREADS=1 TO AVOID ISSUES.
+            I'm serious! Blindly enabling this feature without having designed
+            your database interaction logic with this in mind could lead to
+            bugs that will be nearly impossible to diagnose.
+
+            Note:
+            By default, GDBC already initiates a second connection that can be
+            specifically targeted by calling :low() on the sequence.
+            I recommend you call :low() on non-critical, write-intensive spammy
+            queries (such as statistics collection or logging) and reevaluating
+            performance before resorting to connection pools.
+        ]=====================================================================]
+
+        -- For the reasons listed above, I recommend leaving this parameter out
+        -- entirely if you plan on distributing your script to avoid other 
+        -- people from being tempted to blindly modify its value.
+        -- threads = 1,  -- Set > 1 to enable connection pool. READ ABOVE!
     };
 
     table "players"
@@ -113,9 +174,9 @@ schema "darkrp"
     migration (1)
         [[
             -- -----------------------------------------------------
-            -- Table `csidarkrp`.`players`
+            -- Table `players`
             -- -----------------------------------------------------
-            CREATE TABLE IF NOT EXISTS `csidarkrp`.`players` (
+            CREATE TABLE IF NOT EXISTS `players` (
               `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
               `steamid` VARCHAR(25) NOT NULL,
               PRIMARY KEY (`id`),
@@ -124,9 +185,9 @@ schema "darkrp"
             ENGINE = InnoDB;
 
             -- -----------------------------------------------------
-            -- Table `csidarkrp`.`player_info`
+            -- Table `player_info`
             -- -----------------------------------------------------
-            CREATE TABLE IF NOT EXISTS `csidarkrp`.`player_info` (
+            CREATE TABLE IF NOT EXISTS `player_info` (
               `player_id` INT UNSIGNED NOT NULL,
               `steamname` VARCHAR(45) NULL,
               `rpname` VARCHAR(45) NULL,
@@ -136,7 +197,7 @@ schema "darkrp"
               UNIQUE INDEX `player_id_UNIQUE` (`player_id` ASC),
               CONSTRAINT `fk_player_info.player_id:players.id`
                 FOREIGN KEY (`player_id`)
-                REFERENCES `csidarkrp`.`players` (`id`)
+                REFERENCES `players` (`id`)
                 ON DELETE NO ACTION
                 ON UPDATE NO ACTION)
             ENGINE = InnoDB;
@@ -146,9 +207,9 @@ schema "darkrp"
         [[
             -- -----------------------------------------------------
             -- Steam updated their maximum display name length.
-            -- Update `csidarkrp`.`player_info`.`name` accordingly.
+            -- Update `player_info`.`steamname` accordingly.
             -- -----------------------------------------------------
-            ALTER TABLE `csidarkrp`.`player_info` MODIFY `name` VARCHAR(64);
+            ALTER TABLE `player_info` MODIFY `steamname` VARCHAR(64);
         ]];
 
     -- Support for function-based migration for additional logic
@@ -178,7 +239,7 @@ schema "darkrp"
 }
 ```
 
-### Easily Manageable query chaining control flow
+### Control Flow
 ```lua
 function CSIDB:InitPlayer(ply)
     local steamid = ply:SteamID()
@@ -271,6 +332,35 @@ function CSIDB:SaveDefaultInfo(player_id)
 
     return default_info
 end
+
+-- Workaround for GM.Think to get called even with no players on the server
+-- Required for MySQLOO Query callbacks to be processed.\
+-- Enable this if you want need to load information from the database
+-- before allowing player connections.
+RunConsoleCommand("sv_hibernate_think", "1")
+
+-- GDBC exposes two hooks, GDBC:InitSchemas and GDBC:Ready
+hook.Add("GDBC:Ready", "CSIDB:Ready", function()
+    -- The database has connected and migrations have all been successfully executed.
+    -- Execute any server initialization queries here
+end)
+
+
+hook.Add("GDBC:InitSchemas", "CSIDB:InitSchemas", function()
+    -- GDBC is ready to load schemas and start executing migrations.
+    -- GDBC.LoadSchema("path/to/schema.lua")
+
+    -- Note that GDBC.LoadSchema uses CompileFile internally.
+    -- This means that file paths are relative to the Lua mount path, NOT the current file!
+    -- This also means you should properly namespace these files to avoid conflicts.
+
+    -- e.g file in garrysmod/addons/my_cool_addon/lua/cool_addon/database/schema.lua
+    GDBC.LoadSchema("cool_addon/database/schema.lua")
+
+    -- e.g file in garrysmod/gamemodes/gm_name/gamemode/database/schema.lua
+    GDBC.LoadSchema((GM or GAMEMODE).FolderName .. "/gamemode/database/schema.lua")
+end)
+
 ```
 
 ## XLoader
@@ -279,7 +369,7 @@ end
 Some of the main features include:
 * Automatically `include()` and `AddCSLuaFile()` files in the specified directory
 * Auto-refresh aware [Upstream bug](https://github.com/Facepunch/garrysmod-issues/issues/935)
-* Predictable
+* Guaranteed predictable load order
 
 The include order is as follows:
 1. All `sh_*.lua` files for the current directory, sorted alphanumerically
@@ -380,6 +470,13 @@ Output
 [pairs vs ipairs vs for]  Finished in  0.91671
 ```
 
+## NetWrapper
+This library packages my fork of [netwrapper](https://github.com/xaviergmail/netwrapper).
+
+NetWrapper is a lightweight, bandwidth-focused wrapper around the existing `net` library. You can view its documentation [here](./lua/xlib/netwrapper) as well as examples [here](./lua/xlib/netwrapper/example.lua)
+
+
+
 ## XLIB Extended
 This is a part of XLIB disabled by default for use in packaged applications.
 To enable, simply set `extended "1"` in your `CREDENTIAL_STORE`
@@ -448,13 +545,7 @@ end
 ```
 
 
-### NetWrapper
-This library packages my fork of [netwrapper](https://github.com/xaviergmail/netwrapper).
-
-NetWrapper is a lightweight, bandwidth-focused wrapper around the existing `net` library. You can view its documentation [here](./lua/xlib/netwrapper) as well as examples [here](./lua/xlib/netwrapper/example.lua)
-
-
-### Contributing
+# Contributing
 If you would like to contribute, feel free to create a pull request. As this is a personal project, I can't guarantee that every request will be merged. However, if it benefits the project, I will gladly consider it.
 
 I'm not enforcing any strict code guidelines as this project is already all over the place but please try to match the project's dominant style.
