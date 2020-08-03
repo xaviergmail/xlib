@@ -217,9 +217,16 @@ schema "sample"
     -- Support for function-based migration for additional logic
     migration (3) (function(db, callback)
         db()
-            :queryraw("SELECT VERSION() AS `version`")
+            :queryraw([[
+                SELECT EXISTS (
+                    SELECT * FROM `INFORMATION_SCHEMA`.`SESSION_STATUS`
+                    WHERE VARIABLE_NAME = 'FEATURE_SYSTEM_VERSIONING'
+                ) AS support;
+            ]])
                 :result(function(q, row)
-                    if row.version:lower():find("mariadb") then
+                    -- This particular check could be done with pure SQL
+                    -- But this is for demonstration purposes
+                    if row.support == 1 then
                         return "alter"
                     end
                 end)
