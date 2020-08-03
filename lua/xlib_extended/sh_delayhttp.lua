@@ -7,7 +7,37 @@ delaying their invocation until the first tick.
 
 This implementation makes an attempt to keep compatibility with other
 scripts that may already be detouring these functions.
+
+Known incompatibilities:
+* VCMod will refuse to load because it detects the detour and thinks it's attempting to circumvent its builtin DRM.
+
+Due to these incompatibilities, this feature is now off by default and should instead
+be used as a diagnostic tool. The `xlib_testhttp ok` console command will reload the
+current map with the detour enabled. It will be disabled again for subsequent restarts.
+
+If you wish for this feature to be enabled at all times, set `xlib_delayhttp "1"` in your CREDENTIAL_STORE
 ]]
+
+if SERVER then
+	DevCommand("xlib_testhttp", function(ply, cmd, args)
+		file.Write("xlib_testhttp.txt", "")
+
+		if args[1]:lower() != "ok" then
+			ply:ChatPrint("THIS WILL RELOAD THE CURRENT MAP! Run `xlib_testhttp ok` if you're certain.")
+		else
+			print("xlib_testhttp ran, reloading current map!")
+			RunConsoleCommand("changelevel", game.GetMap())
+		end
+	end)
+
+	if file.Exists("xlib_testhttp.txt", "DATA") then
+		-- Prompted to load by xlib_testhttp, load
+		file.Delete(xlib_testhttp.txt)
+	elseif CREDENTIALS.xlib_delayhttp != 1 then
+		BlockCSLuaFile()
+		return
+	end
+end
 
 XLIB.HTTP = XLIB.HTTP or {}
 

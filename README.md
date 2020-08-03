@@ -12,6 +12,8 @@ A collection of snippets and tools for Garry's Mod development. (Short for Xavie
     - [Declarative Syntax](#declarative-syntax)
     - [Control Flow](#control-flow)
   - [XLoader](#xloader)
+    - [Conditional Networking](#conditional-networking)
+    - [Usage](#usage)
   - [XLIB.Timer](#xlibtimer)
   - [NetWrapper](#netwrapper)
   - [XLIB Extended](#xlib-extended)
@@ -372,13 +374,48 @@ Some of the main features include:
 * Guaranteed predictable load order
 
 The include order is as follows:
-1. All `sh_*.lua` files for the current directory, sorted alphanumerically
+1. All `sh_*.lua`<sup><u><a href="#conditional-networking">1</a></u></sup> files for the current directory, sorted alphanumerically
 2. All `sv_*.lua` or `cl_*.lua` files for the current directory, sorted alphanumerically
-3. Recurse steps 1, 2, 3 in subfolders. Subfolders of subfolders take priority.
+3. Recurse steps 1, 2, 3 in subfolders. Subfolders of subfolders take priority. 
+### Conditional Networking
+Sometimes you might need to dynamically enable/disable shared (or purely clientside) scripts based on a specific condition on server startup.
 
+Introducing `BlockCSLuaFile()`!
+This function can be called within any `sh_*` file to mark the current file to be treated as a server-only file. This means that clients will not execute this file. It won't even be networked!
+
+<details>
+<summary>You can also leverage this for clientside-only files (click to expand)</summary>
+<!-- need lang=lua on both for GitLab<->GitHub compatibility! -->
+<pre lang=lua>
+<code lang=lua>
+if SERVER then
+    -- If for whatever reason you don't want this file 
+    if not testing_something then
+        BlockCSLuaFile()
+    end
+
+    return
+end
+
+-- Run clientside-only code that needs to execute strictly immediately on script evaluation here
+</code>
+</pre>
+</details>
+
+
+**When should you use this?** The answer is: not very often.
+You should only resort to this when you need dynamic control over scripts that should run immediately on Lua state initialization.
+
+Example uses of conditional networking:
+- LAN server workaround: [xlib_extended/sh_multirun.lua](lua/xlib_extended/sh_multirun.lua)
+- One-off diagnostic session: [xlib_extended/sh_delayhttp.lua](lua/xlib_extended/sh_delayhttp.lua)
+- xlib_extended itself could also be modified to benefit from this
+
+
+### Usage
 ```lua
 require "xloader"
-xloader("xlib", function(f) include(f) end)
+xloader("sample_addon", function(f) include(f) end)
 
 -- Breakdown:
 -- First argument is the directory relative to the Lua mount path

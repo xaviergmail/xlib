@@ -1,4 +1,3 @@
-local multirun_file = "xlib_extended/multirun.lua"
 XLIB.Extended = true
 
 if SERVER then
@@ -6,15 +5,6 @@ if SERVER then
 		AddCSLuaFile()
 	else
 		return
-	end
-
-	local lan = GetConVar("sv_lan")
-	if lan:GetBool() then
-		include(multirun_file)
-	end
-else
-	if file.Exists(multirun_file, "LUA") then
-		include(multirun_file)
 	end
 end
 

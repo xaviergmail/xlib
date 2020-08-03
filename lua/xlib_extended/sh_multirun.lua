@@ -1,4 +1,7 @@
-AddCSLuaFile()
+if SERVER and not GetConVar("sv_lan"):GetBool() then
+	BlockCSLuaFile()
+	return
+end
 
 if SERVER then
 	hook.Add("OnEntityCreated", "XLib multirun steamid", function(ent)
