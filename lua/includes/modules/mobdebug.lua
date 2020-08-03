@@ -1,5 +1,9 @@
 if gmod then
   AddCSLuaFile()
+  if not pcall(require, "socket") then
+    XLIB.Warn("Mobdebug disabled: socket module not found. Install https://github.com/danielga/gmod_luasocket")
+    return
+  end
 end
 
 --

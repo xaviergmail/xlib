@@ -4,6 +4,11 @@ _R = debug.getregistry()
 _E = _R.Entity
 _P = _R.Player
 
+local context_blockCSLua = false
+function BlockCSLuaFile()
+	context_blockCSLua = true
+end
+
 local green = Color(0, 255, 150)
 local function log(...)
 	local s = "XLoader: "
@@ -20,8 +25,12 @@ local function doFile(dir, f, _include)
 	f = dir..'/'..f
 
 	if realm == "sh_" then
-		AddCSLuaFile(f)
+		context_blockCSLua = false
 		_include(f)
+
+		if not context_blockCSLua then
+			AddCSLuaFile(f)
+		end
 	elseif SERVER and realm == "sv_" then
 		_include(f)
 	elseif realm == "cl_" then

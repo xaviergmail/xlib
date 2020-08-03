@@ -4,6 +4,8 @@
 --  - Currently running or queued up query sequences
 --  - :wait() on every running query and subsequent queries
 
+require "xlib"
+
 GDBC = GDBC or {}
 
 local MySQLOO_MetaName = "MySQLOO table"
@@ -914,6 +916,9 @@ function perform_migrations(db)
 	                if callback then callback() end
 	            end)
 	            :fail(function(self, row)
+					-- TODO: 1: Add error suppression support
+					-- TODO: 2: Make this work without erroring to begin with
+					log("EVERYTHING IS FINE! Ignore the `Table db.config doesn't exist` error above.")
 	            	execute_migration(0)
             	end)
 

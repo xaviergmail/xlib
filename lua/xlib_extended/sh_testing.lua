@@ -102,7 +102,11 @@ function XLIB.Test(name, test)
 
 		XLIB.Tests.Errored[name] = nil
 
-		local succ, err = xpcall(test, debug.traceback, callback, Log, Err)
+		local fmt = ('[ %s ] ->'):format(name, reason)
+		local _Log = f.apply(Log, "Info   - ", fmt)
+		local _Err = f.apply(Err, "Error  - ", fmt)
+
+		local succ, err = xpcall(test, debug.traceback, callback, _Log, _Err)
 		if not succ then
 			Err("Error occurred while performing test")
 			Err(err)
