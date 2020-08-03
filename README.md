@@ -95,8 +95,51 @@ schema "darkrp"
         pass = CREDENTIALS.mysql.darkrp.pass,
         database = CREDENTIALS.mysql.darkrp.db,
         port = CREDENTIALS.mysql.darkrp.port,
-        threads = 2,
-        usePreparedStatements = true,
+        
+        --[=====================================================================[
+            Whether this database connection should use prepared statements.
+            
+            Before you enable this, ensure that all of your queries are
+            compatible for use within prepared statements.
+
+            https://mariadb.com/kb/en/prepare-statement/#permitted-statements/
+
+            If you would like to benefit from prepared statements while still
+            maintaining the ability to use statements not yet implemented,
+            use :queryraw() along with :prepare():
+
+            DB.schema_name
+                :queryraw(DB.schema_name.table_name.query_name:prepare(...))
+                :exec()
+
+        ]=====================================================================]
+        usePreparedStatements = false,
+
+        --[=====================================================================[
+            CAREFUL! Only queries contained within the same GDBC Query Sequence
+            are guaranteed to be executed in order with strong consistency.
+
+            In single-connection mode, initiating two query sequences one after
+            the other will guarantee that the first sequence will finish before
+            the second 
+
+            IF YOU'RE UNSURE WHAT THIS MEANS, LEAVE THREADS=1 TO AVOID ISSUES.
+            I'm serious! Blindly enabling this feature without having designed
+            your database interaction logic with this in mind could lead to
+            bugs that will be nearly impossible to diagnose.
+
+            Note:
+            By default, GDBC already initiates a second connection that can be
+            specifically targeted by calling :low() on the sequence.
+            I recommend you call :low() on non-critical, write-intensive spammy
+            queries (such as statistics collection or logging) and reevaluating
+            performance before resorting to connection pools.
+        ]=====================================================================]
+
+        -- For the reasons listed above, I recommend leaving this parameter out
+        -- entirely if you plan on distributing your script to avoid other 
+        -- people from being tempted to blindly modify its value.
+        -- threads = 1,  -- Set > 1 to enable connection pool. READ ABOVE!
     };
 
     table "players"
