@@ -22,7 +22,7 @@ function XLIB.Throttle(identifier, delay, callback)
 	throttle.callback = callback
 	active[identifier] = throttle
 
-	timer.Create("xlib.throttle."..identifier, SysTime() - throttle.time, 1, function()
+	timer.Create("xlib.throttle."..identifier, throttle.time - SysTime(), 1, function()
 		XLIB.ExecuteThrottle(identifier)
 	end)
 end
@@ -42,5 +42,37 @@ end
 hook.Add("Shutdown", "XLIB.FinishThrottles", function()
 	for id, t in pairs(active) do
 		XLIB.ExecuteThrottle(identifier)
+	end
+end)
+
+local Test = XLIB.Test or NOOP
+Test("XLIB.Throttle", function(assert, Log, Err)
+	RunConsoleCommand("sv_hibernate_think", "1")
+
+	local n = 10
+
+	local counter = 0
+	local collector = {}
+
+	local start = SysTime()
+	local delay = 2
+
+	local j = util.TableToJSON
+	local function make_callback()
+		counter = counter + 1
+		return function()
+			table.insert(collector, counter)
+			assert("Callback only called once", j(collector), j{n})
+
+			local delta = SysTime() - start
+			local variance = math.abs(delay - delta)
+			local tolerance = engine.TickInterval() * 5
+			Log("Variance", variance, "Delta", delta)
+			assert("Delayed by "..delay.."s within tolerance", variance < tolerance)
+		end
+	end
+
+	for i=1, n do
+		XLIB.Throttle("throttle_test", delay, make_callback())
 	end
 end)
