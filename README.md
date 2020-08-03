@@ -131,9 +131,9 @@ schema "darkrp"
     migration (1)
         [[
             -- -----------------------------------------------------
-            -- Table `csidarkrp`.`players`
+            -- Table `players`
             -- -----------------------------------------------------
-            CREATE TABLE IF NOT EXISTS `csidarkrp`.`players` (
+            CREATE TABLE IF NOT EXISTS `players` (
               `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
               `steamid` VARCHAR(25) NOT NULL,
               PRIMARY KEY (`id`),
@@ -142,9 +142,9 @@ schema "darkrp"
             ENGINE = InnoDB;
 
             -- -----------------------------------------------------
-            -- Table `csidarkrp`.`player_info`
+            -- Table `player_info`
             -- -----------------------------------------------------
-            CREATE TABLE IF NOT EXISTS `csidarkrp`.`player_info` (
+            CREATE TABLE IF NOT EXISTS `player_info` (
               `player_id` INT UNSIGNED NOT NULL,
               `steamname` VARCHAR(45) NULL,
               `rpname` VARCHAR(45) NULL,
@@ -154,7 +154,7 @@ schema "darkrp"
               UNIQUE INDEX `player_id_UNIQUE` (`player_id` ASC),
               CONSTRAINT `fk_player_info.player_id:players.id`
                 FOREIGN KEY (`player_id`)
-                REFERENCES `csidarkrp`.`players` (`id`)
+                REFERENCES `players` (`id`)
                 ON DELETE NO ACTION
                 ON UPDATE NO ACTION)
             ENGINE = InnoDB;
@@ -164,9 +164,9 @@ schema "darkrp"
         [[
             -- -----------------------------------------------------
             -- Steam updated their maximum display name length.
-            -- Update `csidarkrp`.`player_info`.`steamname` accordingly.
+            -- Update `player_info`.`steamname` accordingly.
             -- -----------------------------------------------------
-            ALTER TABLE `csidarkrp`.`player_info` MODIFY `steamname` VARCHAR(64);
+            ALTER TABLE `player_info` MODIFY `steamname` VARCHAR(64);
         ]];
 
     -- Support for function-based migration for additional logic
