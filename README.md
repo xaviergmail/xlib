@@ -41,7 +41,7 @@ credentials
     production "0" // No particular use, for now. Slightly redundant, but you can use `CREDENTIALS.production` as a predicate in your code.
     mysql
     {
-        cats_database
+        sample
         {
             host "localhost"
             db   "cats"
@@ -67,10 +67,10 @@ if CREDENTIALS.development_mode then
     print("Server is running in development mode!")
 end
 
-if not CREDENTIALS.mysql.cats_databse then
-    print("cats_database credentials not found, resorting to sqlite.")
+if not CREDENTIALS.mysql.sample then
+    print("MySQL credentials for `sample` database not found, resorting to sqlite.")
 else
-    print("cats_database login info", SPrintTable(CREDENTIALS.mysql.cats_database))
+    print("Login info for `sample`", SPrintTable(CREDENTIALS.mysql.sample))
 end
 ```
 
@@ -88,15 +88,15 @@ Some of the main features include:
 ### Declarative Syntax
 For connection info, queries and migrations
 ```lua
-schema "darkrp"
+schema "sample"
 {
     connect
     {
-        host = CREDENTIALS.mysql.darkrp.host,
-        user = CREDENTIALS.mysql.darkrp.user,
-        pass = CREDENTIALS.mysql.darkrp.pass,
-        database = CREDENTIALS.mysql.darkrp.db,
-        port = CREDENTIALS.mysql.darkrp.port,
+        host = CREDENTIALS.mysql.sample.host,
+        user = CREDENTIALS.mysql.sample.user,
+        pass = CREDENTIALS.mysql.sample.pass,
+        database = CREDENTIALS.mysql.sample.db,
+        port = CREDENTIALS.mysql.sample.port,
         
         --[=====================================================================[
             Whether this database connection should use prepared statements.
@@ -225,7 +225,7 @@ schema "darkrp"
                 end)
 
             :queryraw "alter" [[
-                ALTER TABLE `csidarkrp`.`player_inventory` ADD SYSTEM VERSIONING;
+                ALTER TABLE `player_inventory` ADD SYSTEM VERSIONING;
             ]]
 
             :success(function(q)
@@ -243,14 +243,17 @@ schema "darkrp"
 
 ### Control Flow
 ```lua
-function CSIDB:InitPlayer(ply)
+require "gdbc"
+
+SAMPLEDB = {}
+function SAMPLEDB:InitPlayer(ply)
     local steamid = ply:SteamID()
     local player_id
 
     -- Initiate a query chain
-    DB.darkrp()
+    DB.sample()
         -- Add a sequential query to the chain
-        :query(DB.darkrp.players.select(steamid))
+        :query(DB.sample.players.get(steamid))
             :result(function(q, row)
                 -- Return next_action, vararg parameters.
                 -- If next_action is nil, execute the next sequential query or operation
@@ -265,7 +268,7 @@ function CSIDB:InitPlayer(ply)
 
         -- Add a named query to the chain
         -- You can pass arguments to the query object if they are knonwn in advance
-        :query "insert" (DB.darkrp.players.insert(steamid))
+        :query "insert" (DB.sample.players.insert(steamid))
             :empty(function(q, last_insert)
                 return "on_id", last_insert
             end)
@@ -278,7 +281,7 @@ function CSIDB:InitPlayer(ply)
 
         -- Add another named query to the chain
         -- This time we don't know the player_id, so it is the caller's job to pass it in its return statement
-        :query "get_info" (DB.darkrp.player_info.get)
+        :query "get_info" (DB.sample.player_info.get)
             :result(function(q, row)
                 -- We have the data, proceed!
                 return "done", row
@@ -294,18 +297,20 @@ function CSIDB:InitPlayer(ply)
                 return false  -- Returning false will abort the query chain
             end
 
-            -- Asynchronously populate `csidarkrp`.`player_info` with player_id and move on
-            local info = CSIDB:SaveDefaultInfo(player_id)
+            -- Asynchronously populate `sample`.`player_info` with player_id and move on
+            local info = SAMPLEDB:SaveDefaultInfo(player_id)
 
             return "done", info
         end)
 
-        :procedure "done" (function(q, player_id)
+        :procedure "done" (function(q, info)
             if not IsValid(ply) then
                 return  -- The player managed to disconnect during the query chain
             end
 
-            hook.Run("CSIDB:PlayerReady", ply)
+            ply.SampleInfo = info
+            ply.SAMPLEDB_ID = player_id
+            hook.Run("SAMPLEDB:PlayerReady", ply)
         end)
 
         -- Enable logging the SQL queries sent from this particular chain only
@@ -316,13 +321,13 @@ function CSIDB:InitPlayer(ply)
 
         -- Used to delay flushing of write-intensive queries to the latest
         -- dataset based on unique_id after max of time_in_seconds
-        :throttle("unique_id", time_in_seconds)
+        :throttle("unique_id", time_in_seconds or 1)
 
         -- Execute the chain. This will start with the first sequential query.
         :exec()
 end
 
-function CSIDB:SaveDefaultInfo(player_id)
+function SAMPLEDB:SaveDefaultInfo(player_id)
     local default_info = {
         steamname = "UNKNOWN",
         rpname = "John Doe",
@@ -335,6 +340,28 @@ function CSIDB:SaveDefaultInfo(player_id)
     return default_info
 end
 
+hook.Add("PlayerInitialSpawn", "SampleAddonHook", function(ply)
+    SAMPLEDB:InitPlayer(ply)
+end)
+
+hook.Add("SAMPLEDB:PlayerReady", "SampleAddonHook", function(ply)
+    -- Player's `sample` database unique ID is now ready for use by scripts that require it!
+    print("Player", ply:Nick(), "successfully loaded from database with ID:", ply.SAMPLEDB_ID,
+          "Luck:", ply.SampleInfo.luck)
+end)
+
+--[[
+
+    THESE UPCOMING TWO HOOKS ARE REQUIRED TO GET GDBC WORKING!
+    "GDBC:InitSchemas", "GDBC:Ready"
+    Read the sample code below for more information.
+
+    The rest of this file (above) is only
+    for documentation purposes and should
+    be replaced with your own implementation.
+
+]]
+
 -- Workaround for GM.Think to get called even with no players on the server
 -- Required for MySQLOO Query callbacks to be processed.\
 -- Enable this if you want need to load information from the database
@@ -342,13 +369,12 @@ end
 RunConsoleCommand("sv_hibernate_think", "1")
 
 -- GDBC exposes two hooks, GDBC:InitSchemas and GDBC:Ready
-hook.Add("GDBC:Ready", "CSIDB:Ready", function()
+hook.Add("GDBC:Ready", "SAMPLEDB:Ready", function()
     -- The database has connected and migrations have all been successfully executed.
     -- Execute any server initialization queries here
 end)
 
-
-hook.Add("GDBC:InitSchemas", "CSIDB:InitSchemas", function()
+hook.Add("GDBC:InitSchemas", "SAMPLEDB:InitSchemas", function()
     -- GDBC is ready to load schemas and start executing migrations.
     -- GDBC.LoadSchema("path/to/schema.lua")
 
