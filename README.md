@@ -260,6 +260,7 @@ function SAMPLEDB:InitPlayer(ply)
     -- Initiate a query chain
     DB.sample()
         -- Add a sequential query to the chain
+        -- If your query returns more than one row, use queryall instead
         :query(DB.sample.players.get(steamid))
             :result(function(q, row)
                 -- Return next_action, vararg parameters.
