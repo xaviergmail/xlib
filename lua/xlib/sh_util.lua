@@ -3,7 +3,7 @@
 -- A set of useful utility functions that don't fit into a category of their own.
 
 -- https://en.wikipedia.org/wiki/Double-precision_floating-point_format
-local double_min = = -(2^-53)
+local double_min = -(2^-53)
 local double_max = (2^53)-1
 
 --- Integer-safe tonumber
