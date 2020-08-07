@@ -100,12 +100,12 @@ function Query:onSuccess(result, last_insert)
 		for k, v in pairs(result) do
 			if istable(v) then
 				for k2, v2 in pairs(v) do
-					if tonumber(v2) then
-						v[k2] = tonumber(v2)
+					if XLIB.tonumber_s(v2) then
+						v[k2] = XLIB.tonumber_s(v2)
 					end
 				end
-			elseif tonumber(v) then
-				result[k] = tonumber(v)
+			elseif XLIB.tonumber_s(v) then
+				result[k] = XLIB.tonumber_s(v)
 			end
 		end
 		stop = self:checkProceed(self:result_callback(result, last_insert))
@@ -175,8 +175,8 @@ function Query:run(...)
 				local t = TypeID(v)
 				if t == table.NIL then
 					query:setNull(k)
-				elseif tonumber(v) then
-					query:setNumber(k, tonumber(v))
+				elseif XLIB.tonumber_s(v) then
+					query:setNumber(k, XLIB.tonumber_s(v))
 				elseif isbool(v) then
 					query:setBool(k, v)
 				elseif isstring(v) then
