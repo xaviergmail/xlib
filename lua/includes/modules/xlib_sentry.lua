@@ -157,12 +157,14 @@ end
 -- All the modules Sentry has detected.
 -- Anything added to this will also be sent to Sentry
 -- @usage sentry.DetectedModules["foo"] = "7.2"
+-- @table DetectedModules
 DetectedModules = {};
 
 ---
 -- More complex ways of detecting a module's version
--- @field _
+-- @field func
 -- @usage sentry.DetectionFuncs["global name"] = function(global_value) return "version", "optional override name" end
+-- @table DetectionFuncs
 DetectionFuncs = {
 	mysqloo = function(mysqloo)
 		return string.format("%d.%d", mysqloo.VERSION, mysqloo.MINOR_VERSION or 0);

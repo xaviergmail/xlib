@@ -1,0 +1,287 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Xavier's Library</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Xavier's Library</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/xui.html">xui</a></li>
+  <li><strong>xlib.utils</strong></li>
+  <li><a href="../modules/lpeg.html">lpeg</a></li>
+  <li><a href="../modules/credentialstore.html">credentialstore</a></li>
+  <li><a href="../modules/XLIB.html">XLIB</a></li>
+  <li><a href="../modules/sentry.html">sentry</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>xlib.utils</code></h1>
+<p>
+
+</p>
+<p> A set of useful utility functions that don't fit into a category of their own.</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#XLIB.tonumber">XLIB.tonumber (str)</a></td>
+	<td class="summary">Integer-safe tonumber</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#XLIB.FreezeProp">XLIB.FreezeProp (ent)</a></td>
+	<td class="summary">Freezes an entity in place</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#XLIB.ColorToInt">XLIB.ColorToInt (color)</a></td>
+	<td class="summary">Serializes a Color object into an integer</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#XLIB.IntToColor">XLIB.IntToColor (int)</a></td>
+	<td class="summary">Deserializes an integer into a Color object</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#XLIB.SafeColor">XLIB.SafeColor (color, noalpha)</a></td>
+	<td class="summary">Clamps all values of a color object between 0-255</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#XLIB.SafeColorNoAlpha">XLIB.SafeColorNoAlpha (color)</a></td>
+	<td class="summary">Shortcut for XLIB.SafeColor(..., true)</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "XLIB.tonumber"></a>
+    <strong>XLIB.tonumber (str)</strong>
+    </dt>
+    <dd>
+    Integer-safe tonumber  This function will return nil if the number to be converted
+ exceeds the integer-definable range of IEEE 754 doubles
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         String to be converted to number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">number</span></span>
+        The converted number, if the conversion is safe
+    </ol>
+     <h3>Or</h3>
+    <ol>
+
+           <span class="types"><span class="type">nil</span></span>
+        Nil if the conversion would lose integer precision
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "XLIB.FreezeProp"></a>
+    <strong>XLIB.FreezeProp (ent)</strong>
+    </dt>
+    <dd>
+    Freezes an entity in place  This sets the entity's movetype to <code>MOVETYPE_NONE</code> and disables
+ motion on its physics object in order to avoid clientside prediction errors.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ent</span>
+            <span class="types"><span class="type">Entity</span></span>
+         Entity to freeze
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "XLIB.ColorToInt"></a>
+    <strong>XLIB.ColorToInt (color)</strong>
+    </dt>
+    <dd>
+    Serializes a Color object into an integer  This is a useful way to store a Color object in binary format
+ as it only uses one double, opposed to 4 (Or god forbid a String)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">color</span>
+            <span class="types"><span class="type">Color</span></span>
+         Color to convert to an int
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">number</span></span>
+        The color object represented as an integer
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "XLIB.IntToColor"></a>
+    <strong>XLIB.IntToColor (int)</strong>
+    </dt>
+    <dd>
+    Deserializes an integer into a Color object
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">int</span>
+            <span class="types"><span class="type">number</span></span>
+         Integer to convert to a Color object
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">Color</span></span>
+
+
+
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/xlib.utils.html#XLIB.ColorToInt">XLIB.ColorToInt</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "XLIB.SafeColor"></a>
+    <strong>XLIB.SafeColor (color, noalpha)</strong>
+    </dt>
+    <dd>
+    Clamps all values of a color object between 0-255
+
+    <h3>Warning:</h3>
+    <ul>
+        <pre class="warn">This modifies the color object passed to it rather than creating a copy!</pre>
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">color</span>
+            <span class="types"><span class="type">Color</span></span>
+         The color object to clamp
+        </li>
+        <li><span class="parameter">noalpha</span>
+            <span class="types"><span class="type">bool[opt=false]</span></span>
+         Forces the alpha channel to 255 if true
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">Color</span></span>
+        The color object passed as the first argument
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "XLIB.SafeColorNoAlpha"></a>
+    <strong>XLIB.SafeColorNoAlpha (color)</strong>
+    </dt>
+    <dd>
+    Shortcut for XLIB.SafeColor(..., true)  Clamps all the values of a color object between 0-255 and forces the alpha to 255
+
+    <h3>Warning:</h3>
+    <ul>
+        <pre class="warn">This modifies the color object passed to it rather than creating a copy!</pre>
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">color</span>
+            <span class="types"><span class="type">Color</span></span>
+         The color object to clamp
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/xlib.utils.html#XLIB.SafeColor">XLIB.SafeColor</a>
+    </ul>
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="https://github.com/xaviergmail/GLDoc">GLDoc 1.4.6-GLua</a></i>
+<i style="float:right;">Last updated 2020-08-06 21:59:36 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
