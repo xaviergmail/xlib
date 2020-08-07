@@ -1,7 +1,8 @@
 # XLIB
 A collection of snippets and tools for Garry's Mod development. (Short for Xavier's Library)
 
-*TODO: LDoc documentation. This library is mostly limited to internal use, but is a dependency for some of my future releases.*
+> GLDoc documentation is currently underway. View [./docs/](./docs/index.html) It is currently not hosted anywhere but will be put on GH pages once more documentation is written.
+> Feel free to submit any pull requests to improve the documentation!
 
 
 - [XLIB](#xlib)
