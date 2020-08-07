@@ -13,7 +13,7 @@ local double_max = (2^53)-1
 -- @tparam string str String to be converted to number
 -- @treturn[1] number The converted number, if the conversion is safe
 -- @treturn[2] nil Nil if the conversion would lose integer precision
-function XLIB.tonumber(str)
+function XLIB.tonumber_s(str)
 	local num = tonumber(str)
 	if not num then return nil end
 
