@@ -19,18 +19,17 @@ If you wish for this feature to be enabled at all times, set `xlib_delayhttp "1"
 ]]
 
 if SERVER then
-	if DevCommand then
-		DevCommand("xlib_testhttp", function(ply, cmd, args)
-			file.Write("xlib_testhttp.txt", "")
+	DevCommand("xlib_testhttp", function(ply, cmd, args)
+		file.Write("xlib_testhttp.txt", "")
 
-			if args[1]:lower() != "ok" then
-				ply:ChatPrint("THIS WILL RELOAD THE CURRENT MAP! Run `xlib_testhttp ok` if you're certain.")
-			else
-				print("xlib_testhttp ran, reloading current map!")
-				RunConsoleCommand("changelevel", game.GetMap())
-			end
-		end)
-	end
+		if args[1]:lower() != "ok" then
+			ply:ChatPrint("THIS WILL RELOAD THE CURRENT MAP! Run `xlib_testhttp ok` if you're certain.")
+		else
+			print("xlib_testhttp ran, reloading current map!")
+			RunConsoleCommand("changelevel", game.GetMap())
+		end
+	end)
+
 	if file.Exists("xlib_testhttp.txt", "DATA") then
 		-- Prompted to load by xlib_testhttp concommand, proceed with loading
 		file.Delete(xlib_testhttp.txt)
