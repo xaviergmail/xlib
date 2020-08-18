@@ -46,8 +46,8 @@ function XLIB.EnsureHTTP(fn)
 		fn()
 	else
 		local id = "XLIB.EnsureHTTP:"..tostring(fn)
-		hook.Add("HTTPReady", id, function()
-			hook.Remove("HTTPReady", id)
+		hook.Add("Tick", id, function()
+			hook.Remove("Tick", id)
 			fn()
 		end)
 	end
