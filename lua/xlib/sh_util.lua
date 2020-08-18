@@ -26,11 +26,22 @@ end
 -- This sets the entity's movetype to `MOVETYPE_NONE` and disables
 -- motion on its physics object in order to avoid clientside prediction errors.
 -- @tparam Entity ent Entity to freeze
-function XLIB.FreezeProp(ent)
+-- @tparam[opt=false] bool no_children Set to true to *prevent* recursively freezing child entities
+function XLIB.FreezeProp(ent, no_children)
 	ent:SetMoveType(MOVETYPE_NONE)
+
 	local phys = ent:GetPhysicsObject()
 	if IsValid(phys) then
-		phys:EnableMotion(false)
+		for i=0, ent:GetPhysicsObjectCount()-1 do
+			local phys = ent:GetPhysicsObjectNum(i)
+			phys:EnableMotion(false)
+		end
+	end
+
+	if not no_children then
+		for k, v in ipairs(ent:GetChildren()) do
+			XLIB.FreezeProp(v)
+		end
 	end
 end
 
