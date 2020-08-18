@@ -71,6 +71,8 @@ end
 _R = debug.getregistry()
 _P = _R.Player
 _E = _R.Entity
+PLAYER = _P
+ENTITY = _E
 
 NOOP = function() end
 TRUE = function() return true end
