@@ -22,11 +22,12 @@ AddCSLuaFile()
 --	Namespace Tables
 --------------------------------------------------------------------------]]--
 
-netwrapper          = netwrapper          or {}
-netwrapper.ents     = netwrapper.ents     or {}
-netwrapper.clients  = netwrapper.clients  or {}
-netwrapper.requests = netwrapper.requests or {}
-netwrapper.hooks    = netwrapper.hooks 	  or {}
+netwrapper             = netwrapper             or {}
+netwrapper.ents        = netwrapper.ents        or {}
+netwrapper.clients     = netwrapper.clients     or {}
+netwrapper.clientvars  = netwrapper.clientvars  or {}
+netwrapper.requests    = netwrapper.requests    or {}
+netwrapper.hooks       = netwrapper.hooks 	    or {}
 
 --[[ -------------------------------------------------------------------------
 -- 	Localized Functions & Variables
@@ -112,6 +113,9 @@ end
 --	 again, you can set the 3rd argument, 'force', to true.
 --]]--
 function ENTITY:SetNetVar( key, value, force )
+	if ( netwrapper.clientvars[ key ] ) then
+		return self:SetClientVar( key, value, force )
+	end
 
 	if ( netwrapper.GetNetVars( self:NWIndex() )[ key ] == value and not force ) then return end
 
@@ -132,6 +136,10 @@ end
 --	 OR nil if no default was provided and this key hasn't been set.
 --]]--
 function ENTITY:GetNetVar( key, default )
+	if ( netwrapper.clientvars[ key ] ) then
+		return self:GetClientVar( key, default )
+	end
+
 	local values = netwrapper.GetNetVars( self:NWIndex() )
 	if ( values[ key ] ~= nil ) then return values[ key ] else return default end
 end
@@ -144,6 +152,10 @@ end
 --  Uniquely identified by name to be later removed by ENTITY:RemoveNetHook
 --]]--
 function ENTITY:AddNetHook( key, name, fn )
+	if ( netwrapper.clientvars[ key ] ) then
+		return self:AddClientHook( key, name, fn )
+	end
+
 	netwrapper.StoreNetHook( self:NWIndex(), key, name, fn )
 end
 
@@ -154,6 +166,10 @@ end
 --	Removes the Net Hook on this entity referred to by NetVar key and hook Name
 --]]--
 function ENTITY:RemoveNetHook( key, name )
+	if ( netwrapper.clientvars[ key ] ) then
+		return self:RemoveNetHook( key, name )
+	end
+
 	netwrapper.StoreNetHook( self:NWIndex(), key, name, nil )
 end
 
@@ -364,6 +380,20 @@ end
 function netwrapper.GetClientVars( id )
 	return netwrapper.clients[ id ] or {}
 end
+
+
+
+--[[ -------------------------------------------------------------------------
+--
+--	netwrapper.DefineClientVar( string )
+--
+--	Marks a specific NetVar key to be handled as a ClientVar from (Get|Set)NetVar functions
+--  Added for easier backwards-compatibility with Dash
+--]]--
+function netwrapper.DefineClientVar( key )
+	netwrapper.clientvars[ key ] = true
+end
+
 
 --[[ -------------------------------------------------------------------------
 --	GLOBAL NET VARS

@@ -25,13 +25,22 @@ local mt = {
 		if defaults[k] ~= nil then
 			return defaults[k]
 		end
-		ErrorNoHalt(fmterr("Tried to read credentials for "..(tostring(k))
-			         .." but it was not set in the "..credential_store.." file!\n"))
+		MsgC(Color(255, 255, 0), fmterr("A script is referencing `"..(tostring(k))
+			         .."` which is not configured! Functionality likely disabled.\n"))
 	end
 }
 
-local creds = setmetatable(util.KeyValuesToTable(file.Read(credential_store, "GAME")), mt)
-_G.CREDENTIALS = creds
+local creds = util.KeyValuesToTable(file.Read(credential_store, "GAME"))
+
+if creds.CHECK then
+	error('"CHECK" is a reserved path in '..credential_store..'. Please rename your configuration to something else.')
+end
+
+-- Use CREDENTIALS.CHECK to quietly check if a feature is enabled or disabled
+-- without printing a warning message to the console when it isn't set.
+
+creds.CHECK = creds
+_G.CREDENTIALS = setmetatable(creds, mt)
 
 if creds.extended then
 	SetGlobalBool("development_mode", CREDENTIALS.development_mode == 1)

@@ -31,7 +31,7 @@ if SERVER then
 	end)
 
 	if file.Exists("xlib_testhttp.txt", "DATA") then
-		-- Prompted to load by xlib_testhttp, load
+		-- Prompted to load by xlib_testhttp concommand, proceed with loading
 		file.Delete(xlib_testhttp.txt)
 	elseif CREDENTIALS.xlib_delayhttp != 1 then
 		BlockCSLuaFile()
@@ -88,8 +88,6 @@ local function process()
 	for _, cb in ipairs(requests) do
 		cb.func(table.UnpackNil(cb.args))
 	end
-
-	hook.Run("HTTPReady")
 end
 
 hook.Add("Tick", "xlib.delayhttprequests", function()

@@ -4,6 +4,9 @@ _R = debug.getregistry()
 _E = _R.Entity
 _P = _R.Player
 
+PLAYER = _P
+ENTITY = _E
+
 local context_blockCSLua = false
 function BlockCSLuaFile()
 	context_blockCSLua = true

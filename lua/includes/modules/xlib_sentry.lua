@@ -260,6 +260,8 @@ local errHist = {};
 -- @return true if this specific error is currently being rate-limited, false if not
 local function rateLimit(err)
 	local block = false;
+	if err == nil then return false; end
+
 	if errHist[err] and errHist[err] > RealTime() then
 		block = true;
 	end
