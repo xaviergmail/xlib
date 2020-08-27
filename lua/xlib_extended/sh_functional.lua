@@ -1,5 +1,10 @@
 local unpack = (unpack or table.unpack)
-f = f or {}
+
+f = setmetatable({}, {
+	__call = function(f, ...)
+		return f.bind(...)
+	end
+})
 
 f.toFunction = function (func)
 	if type (func) == "function" then
