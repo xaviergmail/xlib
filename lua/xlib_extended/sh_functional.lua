@@ -62,6 +62,10 @@ f.partial = function(func, ...)
     end
 end
 
+f.bind = function(obj, key, ...)
+	return f.apply(obj[key], obj, ...)
+end
+
 f.call   = function (f, ...) return f (...) end
 f.concat = table.concat
 
