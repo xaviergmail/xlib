@@ -1,5 +1,10 @@
 local unpack = (unpack or table.unpack)
-f = f or {}
+
+f = setmetatable({}, {
+	__call = function(f, ...)
+		return f.bind(...)
+	end
+})
 
 f.toFunction = function (func)
 	if type (func) == "function" then
@@ -58,8 +63,22 @@ end
 f.partial = function(func, ...)
     local args = table.PackNil(...)
     return function(...)
-        return func(table.UunpacNilk(table.Add(args,table.PackNil(...))))
+        return func(table.UnpackNil(table.Add(args,table.PackNil(...))))
     end
+end
+
+-- rpartial is partial application for the end of the arguments.
+-- Useful e.g `f.map(f.rpartial(_E.Fire, "Trigger"), ents.FindByClass("logic_relay"))`
+-- note that f.map does this already more neatly: `f.map(_E.Fire, ents.FindByClass("logic_relay"), "Trigger")
+f.rpartial = function(func, ...)
+    local args = table.PackNil(...)
+    return function(...)
+        return func(table.UnpackNil(table.Add(table.PackNil(...), args)))
+    end
+end
+
+f.bind = function(obj, key, ...)
+	return f.apply(obj[key], obj, ...)
 end
 
 f.call   = function (f, ...) return f (...) end
