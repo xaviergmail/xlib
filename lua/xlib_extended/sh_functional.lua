@@ -58,7 +58,7 @@ end
 f.partial = function(func, ...)
     local args = table.PackNil(...)
     return function(...)
-        return func(table.UunpacNilk(table.Add(args,table.PackNil(...))))
+        return func(table.UnpackNil(table.Add(args,table.PackNil(...))))
     end
 end
 
