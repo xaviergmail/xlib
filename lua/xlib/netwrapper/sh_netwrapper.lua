@@ -1,34 +1,35 @@
---[[--------------------------------------------------------------------------
-	File name:
-		sh_netwrapper.lua
-
-	Authors:
-		Mista-Tea ([IJWTB] Thomas)
-		xaviergmail (Xavier Bergeron)
-
-	License:
-		The MIT License (copy/modify/distribute freely!)
-
-	Changelog:
-		- March 9th,   2014:    Created
-		- April 5th,   2014:    Added to GitHub
-		- August 15th, 2014:    Added Net Requests
-		- April  25th, 2019:	Added Net Hooks, Global Vars, Client Vars, Persistence
+--[[ -------------------------------------------------------------------------
+--	File name:
+--		sh_netwrapper.lua
+--
+--	Authors:
+--		Mista-Tea ([IJWTB] Thomas)
+--		xaviergmail (Xavier Bergeron)
+--
+--	License:
+--		The MIT License (copy/modify/distribute freely!)
+--
+--	Changelog:
+--		- March 9th,   2014:    Created
+--		- April 5th,   2014:    Added to GitHub
+--		- August 15th, 2014:    Added Net Requests
+--		- April  25th, 2019:	Added Net Hooks, Global Vars, Client Vars, Persistence
 ----------------------------------------------------------------------------]]
 
 AddCSLuaFile()
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --	Namespace Tables
 --------------------------------------------------------------------------]]--
 
-netwrapper          = netwrapper          or {}
-netwrapper.ents     = netwrapper.ents     or {}
-netwrapper.clients  = netwrapper.clients  or {}
-netwrapper.requests = netwrapper.requests or {}
-netwrapper.hooks    = netwrapper.hooks 	  or {}
+netwrapper             = netwrapper             or {}
+netwrapper.ents        = netwrapper.ents        or {}
+netwrapper.clients     = netwrapper.clients     or {}
+netwrapper.clientvars  = netwrapper.clientvars  or {}
+netwrapper.requests    = netwrapper.requests    or {}
+netwrapper.hooks       = netwrapper.hooks 	    or {}
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 -- 	Localized Functions & Variables
 --------------------------------------------------------------------------]]--
 
@@ -83,15 +84,15 @@ function netwrapper.Entity(id)
 	end
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --	Namespace Functions
 --------------------------------------------------------------------------]]--
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --	NET VARS
 --------------------------------------------------------------------------]]--
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	ENTITY:SetNetVar( string, *, boolean [optional] )
 --
@@ -112,6 +113,9 @@ end
 --	 again, you can set the 3rd argument, 'force', to true.
 --]]--
 function ENTITY:SetNetVar( key, value, force )
+	if ( netwrapper.clientvars[ key ] ) then
+		return self:SetClientVar( key, value, force )
+	end
 
 	if ( netwrapper.GetNetVars( self:NWIndex() )[ key ] == value and not force ) then return end
 
@@ -122,7 +126,7 @@ function ENTITY:SetNetVar( key, value, force )
 	end
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	ENTITY:GetNetVar( string, * )
 --
@@ -132,11 +136,15 @@ end
 --	 OR nil if no default was provided and this key hasn't been set.
 --]]--
 function ENTITY:GetNetVar( key, default )
+	if ( netwrapper.clientvars[ key ] ) then
+		return self:GetClientVar( key, default )
+	end
+
 	local values = netwrapper.GetNetVars( self:NWIndex() )
 	if ( values[ key ] ~= nil ) then return values[ key ] else return default end
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	ENTITY:AddNetHook( string, string, function( entity, key, value ) )
 --
@@ -144,20 +152,28 @@ end
 --  Uniquely identified by name to be later removed by ENTITY:RemoveNetHook
 --]]--
 function ENTITY:AddNetHook( key, name, fn )
+	if ( netwrapper.clientvars[ key ] ) then
+		return self:AddClientHook( key, name, fn )
+	end
+
 	netwrapper.StoreNetHook( self:NWIndex(), key, name, fn )
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	ENTITY:AddNetHook( string, string )
 --
 --	Removes the Net Hook on this entity referred to by NetVar key and hook Name
 --]]--
 function ENTITY:RemoveNetHook( key, name )
+	if ( netwrapper.clientvars[ key ] ) then
+		return self:RemoveNetHook( key, name )
+	end
+
 	netwrapper.StoreNetHook( self:NWIndex(), key, name, nil )
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.StoreNetVar( int, string, * )
 --
@@ -175,7 +191,7 @@ function netwrapper.StoreNetVar( id, key, value )
 	netwrapper.NetVarChanged( -1, key, value, old, id )  -- Hack: use entity ID -1 as an all-inclusive hook
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.GetNetVars( id )
 --
@@ -186,7 +202,7 @@ function netwrapper.GetNetVars( id )
 	return netwrapper.ents[ id ] or {}
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.StoreNetHook( int, string, string, function( entity, key, value ) )
 --
@@ -198,7 +214,7 @@ function netwrapper.StoreNetHook( id, key, name, fn )
 	netwrapper.hooks[ id ][ key ][ name ] = fn
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.AddNetHook( string, string, function( entity, key, value ) )
 --
@@ -210,7 +226,7 @@ function netwrapper.AddNetHook( key, name, fn )
 	netwrapper.StoreNetHook( -1, key, name, fn )
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.RemoveNetHook( string, string )
 --
@@ -220,7 +236,7 @@ function netwrapper.RemoveNetHook( key, name )
 	netwrapper.StoreNetHook( -1, key, name, nil  )
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.NetVarChanged( int, string, *, int, bool )
 --
@@ -248,7 +264,7 @@ function netwrapper.NetVarChanged( id, key, value, old, realid, clvar )
 	end
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --	CLIENT VARS
 --  Functionally identical to NetVars, but for players only, with the
 --	 difference being that ClientVars are only networked to their respective
@@ -256,7 +272,7 @@ end
 --  Example usage would be to network a player's health, money, inventory, etc.
 --------------------------------------------------------------------------]]--
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	PLAYER:SetClientVar( string, *, boolean [optional] )
 --
@@ -274,7 +290,7 @@ function PLAYER:SetClientVar( key, value, force )
 	end
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	PLAYER:GetClientVar( string, * )
 
@@ -296,7 +312,7 @@ end
 -- identifiers to prevent clash between AddNetHook("Money") and AddCLNetHook("Money")
 netwrapper.CLNetHookPrefix = "ClientVar_"
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	PLAYER:AddCLNetHook( string, string, function( entity, key, value ) )
 --
@@ -314,7 +330,7 @@ function PLAYER:AddCLNetHook( key, name, fn )
 	end
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	PLAYER:RemoveCLNetHook( string, string )
 --
@@ -324,7 +340,7 @@ function PLAYER:RemoveCLNetHook( key, name )
 	netwrapper.StoreNetHook( self:NWIndex(), netwrapper.CLNetHookPrefix .. key, name, nil )
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.AddCLNetHook( string, string, function( entity, key, value ) )
 --
@@ -336,7 +352,7 @@ function netwrapper.AddCLNetHook( key, name, fn )
 	netwrapper.StoreNetHook( -1, netwrapper.CLNetHookPrefix .. key, name, fn )
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.StoreClientVar( int, string, * )
 --
@@ -354,7 +370,7 @@ function netwrapper.StoreClientVar( id, key, value )
 	netwrapper.NetVarChanged( -1, key, value, old, id, true )  -- Hack: use entity ID -1 as an all-inclusive hook
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.GetClientVars( id )
 --
@@ -365,12 +381,26 @@ function netwrapper.GetClientVars( id )
 	return netwrapper.clients[ id ] or {}
 end
 
---[[--------------------------------------------------------------------------
+
+
+--[[ -------------------------------------------------------------------------
+--
+--	netwrapper.DefineClientVar( string )
+--
+--	Marks a specific NetVar key to be handled as a ClientVar from (Get|Set)NetVar functions
+--  Added for easier backwards-compatibility with Dash
+--]]--
+function netwrapper.DefineClientVar( key )
+	netwrapper.clientvars[ key ] = true
+end
+
+
+--[[ -------------------------------------------------------------------------
 --	GLOBAL NET VARS
 --  Wrapper around netvar functions applied on the game.GetWorld() entity
 --------------------------------------------------------------------------]]--
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.SetGlobalVar( string, *, boolean [optional] )
 --
@@ -381,7 +411,7 @@ function netwrapper.SetGlobalVar( key, value, force )
 	game.GetWorld():SetNetVar( key, value, force )
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.GetGlobalVar( string, * )
 --
@@ -391,7 +421,7 @@ function netwrapper.GetGlobalVar( key, default )
 	return game.GetWorld():GetNetVar( key, default )
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.AddGlobalHook( string, string, function( key, value ) )
 --
@@ -401,7 +431,7 @@ function netwrapper.AddGlobalHook( key, name, fn )
 	game.GetWorld():AddNetHook( key, name, fn )
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper:RemoveGlobalHook( string, string, function( key, value ) )
 --
@@ -411,11 +441,11 @@ function netwrapper:RemoveGlobalHook( key, name )
 	game.GetWorld():RemoveNetHook( key, name )
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --	NET REQUESTS
 --------------------------------------------------------------------------]]--
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	ENTITY:SetNetRequest( string, * )
 --
@@ -440,7 +470,7 @@ function ENTITY:SetNetRequest( key, value )
 	netwrapper.StoreNetRequest( self:NWIndex(), key, value )
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	ENTITY:GetNetRequest( string, * )
 --
@@ -454,7 +484,7 @@ function ENTITY:GetNetRequest( key, default )
 	if ( values[ key ] ~= nil ) then return values[ key ] else return default end
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.StoreNetRequest( number, string, * )
 --
@@ -468,7 +498,7 @@ function netwrapper.StoreNetRequest( id, key, value )
 	netwrapper.requests[ id ][ key ] = value
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.GetNetRequests( number )
 --
@@ -479,7 +509,7 @@ function netwrapper.GetNetRequests( id )
 	return netwrapper.requests[ id ] or {}
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.RemoveNetVars( number )
 --
@@ -494,7 +524,7 @@ end
 
 
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.ClearData( id )
 --

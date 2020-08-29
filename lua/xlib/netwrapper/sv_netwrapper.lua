@@ -1,22 +1,22 @@
---[[--------------------------------------------------------------------------
-	File name:
-		sv_netwrapper.lua
-
-	Authors:
-		Mista-Tea ([IJWTB] Thomas)
-		xaviergmail (Xavier Bergeron)
-
-	License:
-		The MIT License (copy/modify/distribute freely!)
-
-	Changelog:
-		- March 9th,   2014:    Created
-		- April 5th,   2014:    Added to GitHub
-		- August 15th, 2014:    Added Net Requests
-		- April  25th, 2019:	Added Net Hooks, Global Vars, Client Vars, Persistence
+--[[ -------------------------------------------------------------------------
+--	File name:
+--		sv_netwrapper.lua
+--
+--	Authors:
+--		Mista-Tea ([IJWTB] Thomas)
+--		xaviergmail (Xavier Bergeron)
+--
+--	License:
+--		The MIT License (copy/modify/distribute freely!)
+--
+--	Changelog:
+--		- March 9th,   2014:    Created
+--		- April 5th,   2014:    Added to GitHub
+--		- August 15th, 2014:    Added Net Requests
+--		- April  25th, 2019:	Added Net Hooks, Global Vars, Client Vars, Persistence
 ----------------------------------------------------------------------------]]
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 -- 	Namespace Tables
 --------------------------------------------------------------------------]]--
 
@@ -27,7 +27,7 @@ netwrapper.requests        = netwrapper.requests        or {}
 netwrapper.persistentvars  = netwrapper.persistentvars  or {}
 netwrapper.plypersistence  = netwrapper.plypersistence  or {}
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 -- 	Localized Functions & Variables
 --------------------------------------------------------------------------]]--
 
@@ -44,15 +44,15 @@ util.AddNetworkString( "NetWrapperClear" )
 
 local ENTITY = FindMetaTable( "Entity" )
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 -- 	Namespace Functions
 --------------------------------------------------------------------------]]--
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --	NET VARS
 --------------------------------------------------------------------------]]--
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	Net - NetWrapperVar
 --
@@ -63,7 +63,7 @@ net.Receive( "NetWrapperVar", function( len, ply )
 	netwrapper.SyncClient( ply )
 end )
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.SyncClient( player )
 --
@@ -95,7 +95,7 @@ function netwrapper.SyncClient( ply )
 	end
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.BroadcastNetVar( int, string, * )
 --
@@ -111,7 +111,7 @@ function netwrapper.BroadcastNetVar( id, key, value )
 	net.Broadcast()
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.SendNetVar( player, int, string, *, boolean )
 --
@@ -129,11 +129,11 @@ end
 
 
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --	NET REQUESTS
 --------------------------------------------------------------------------]]--
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	Net - NetWrapperRequest
 --
@@ -162,7 +162,7 @@ net.Receive( "NetWrapperRequest", function( bits, ply )
 	end
 end )
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.SendNetRequest( player, number, string, * )
 --
@@ -180,7 +180,7 @@ function netwrapper.SendNetRequest( ply, id, key, value )
 end
 
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.DefinePersistentVar( string )
 --
@@ -197,7 +197,7 @@ function netwrapper.DefinePersistentVar( key )
 	netwrapper.persistentvars[ key ] = true
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.UndefinePersistentVar( string )
 --
@@ -207,7 +207,7 @@ function netwrapper.UndefinePersistentVar( key )
 	netwrapper.persistentvars[ key ] = true
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 --	netwrapper.FilterPersistentVars( table )
 --
@@ -227,7 +227,7 @@ function netwrapper.FilterPersistentVars( tbl )
 	return tbl
 end
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 -- 	Hook - EntityRemoved( entity )
 --
@@ -254,7 +254,7 @@ hook.Add( "EntityRemoved", "NetWrapperClear", function( ent )
 	netwrapper.ClearData( ent:NWIndex() )
 end )
 
---[[--------------------------------------------------------------------------
+--[[ -------------------------------------------------------------------------
 --
 -- 	Hook - EntityRemoved( entity )
 --

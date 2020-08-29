@@ -1,7 +1,8 @@
 # XLIB
 A collection of snippets and tools for Garry's Mod development. (Short for Xavier's Library)
 
-*TODO: LDoc documentation. This library is mostly limited to internal use, but is a dependency for some of my future releases.*
+> GLDoc documentation is currently underway. View [./docs/](./docs/index.html) It is currently not hosted anywhere but will be put on GH pages once more documentation is written.
+> Feel free to submit any pull requests to improve the documentation!
 
 
 - [XLIB](#xlib)
@@ -217,9 +218,16 @@ schema "sample"
     -- Support for function-based migration for additional logic
     migration (3) (function(db, callback)
         db()
-            :queryraw("SELECT VERSION() AS `version`")
+            :queryraw([[
+                SELECT EXISTS (
+                    SELECT * FROM `INFORMATION_SCHEMA`.`SESSION_STATUS`
+                    WHERE VARIABLE_NAME = 'FEATURE_SYSTEM_VERSIONING'
+                ) AS support;
+            ]])
                 :result(function(q, row)
-                    if row.version:lower():find("mariadb") then
+                    -- This particular check could be done with pure SQL
+                    -- But this is for demonstration purposes
+                    if row.support == 1 then
                         return "alter"
                     end
                 end)
@@ -253,6 +261,7 @@ function SAMPLEDB:InitPlayer(ply)
     -- Initiate a query chain
     DB.sample()
         -- Add a sequential query to the chain
+        -- If your query returns more than one row, use queryall instead
         :query(DB.sample.players.get(steamid))
             :result(function(q, row)
                 -- Return next_action, vararg parameters.

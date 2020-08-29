@@ -167,3 +167,8 @@ DevCommand("nobots", function()
 		v:Kick()
 	end
 end)
+
+DevCommand("reloadmap", function(ply)
+	if IsValid(ply) then return end
+	RunConsoleCommand("changelevel", game.GetMap())
+end)

@@ -1,3 +1,10 @@
+--- Xavier's Library
+--
+-- This documentation is a work-in-progress. Feel free to submit a pull
+-- request if you'd like to contribute to it! The documentation uses LDoc.
+-- @module XLIB
+
+
 AddCSLuaFile()
 _MODULES.xlib = true
 

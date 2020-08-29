@@ -46,8 +46,8 @@ function XLIB.EnsureHTTP(fn)
 		fn()
 	else
 		local id = "XLIB.EnsureHTTP:"..tostring(fn)
-		hook.Add("HTTPReady", id, function()
-			hook.Remove("HTTPReady", id)
+		hook.Add("Tick", id, function()
+			hook.Remove("Tick", id)
 			fn()
 		end)
 	end
@@ -71,6 +71,8 @@ end
 _R = debug.getregistry()
 _P = _R.Player
 _E = _R.Entity
+PLAYER = _P
+ENTITY = _E
 
 NOOP = function() end
 TRUE = function() return true end

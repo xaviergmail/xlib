@@ -1,14 +1,15 @@
--- LuLPeg, a pure Lua port of LPeg, Roberto Ierusalimschy's
--- Parsing Expression Grammars library.
+---
+-- LuLPeg, a pure Lua port of LPeg, Roberto Ierusalimschy's Parsing Expression Grammars library.
+--
+-- See [http://www.inf.puc-rio.br/~roberto/lpeg/](http://www.inf.puc-rio.br/~roberto/lpeg/) for the original documentation
 --
 -- Copyright (C) Pierre-Yves Gerardy.
 -- Released under the Romantic WTF Public License (cf. the LICENSE
 -- file or the end of this file, whichever is present).
 --
--- See http://www.inf.puc-rio.br/~roberto/lpeg/ for the original.
---
--- The re.lua module and the test suite (tests/lpeg.*.*.tests.lua)
--- are part of the original LPeg distribution.
+-- @module lpeg
+
+
 local _ENV,       loaded, packages, release, require_
     = _ENV or _G, {},     {},       true,    require
 

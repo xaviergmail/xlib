@@ -1,21 +1,19 @@
---[[--------------------------------------------------------------------------
-	File name:
-		example.lua
-
-	Authors:
-		Mista-Tea ([IJWTB] Thomas)
-		xaviergmail (Xavier Bergeron)
-
-	License:
-		The MIT License (copy/modify/distribute freely!)
-
-	Changelog:
-		- March   9th, 2014:    Created
-		- April   5th, 2014:    Added to GitHub
-		- August 16th, 2014:    Rewrote example for Net Vars / Net Requests
-		- April  25th, 2019:	Added examples for Client Vars / Global Vars / Hooks
-
-
+--[[ -------------------------------------------------------------------------
+--	File name:
+--		example.lua
+--
+--	Authors:
+--		Mista-Tea ([IJWTB] Thomas)
+--		xaviergmail (Xavier Bergeron)
+--
+--	License:
+--		The MIT License (copy/modify/distribute freely!)
+--
+--	Changelog:
+--		- March   9th, 2014:    Created
+--		- April   5th, 2014:    Added to GitHub
+--		- August 16th, 2014:    Rewrote example for Net Vars / Net Requests
+--		- April  25th, 2019:	Added examples for Client Vars / Global Vars / Hooks
 ----------------------------------------------------------------------------]]
 
 -- In this example, we will assign a player's name to the prop they spawn in PlayerSpawnedProp.
@@ -31,9 +29,9 @@
 
 
 
---[[-------------------------------------------]]--
+--[[ ----------------------------------------- ]]--
 --                    Net Vars
---[[-------------------------------------------]]--
+--[[ ----------------------------------------- ]]--
 
 -- Helper function for demo
 local function fmtHook( ent, key, value )
@@ -92,9 +90,9 @@ end
 
 
 
---[[-------------------------------------------]]--
+--[[ ----------------------------------------- ]]--
 --                 Net Requests
---[[-------------------------------------------]]--
+--[[ ----------------------------------------- ]]--
 
 if ( SERVER ) then
 
@@ -137,9 +135,9 @@ end
 
 
 
---[[-------------------------------------------]]--
+--[[ ----------------------------------------- ]]--
 --                 Global Variables
---[[-------------------------------------------]]--
+--[[ ----------------------------------------- ]]--
 
 
 if ( SERVER ) then
@@ -181,9 +179,9 @@ elseif ( CLIENT ) then
 end
 
 
---[[-------------------------------------------]]--
+--[[ ----------------------------------------- ]]--
 --                 ClientVars
---[[-------------------------------------------]]--
+--[[ ----------------------------------------- ]]--
 
 
 if ( SERVER ) then

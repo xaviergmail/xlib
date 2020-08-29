@@ -46,3 +46,13 @@ end
 
 net.WriteVars[TYPE_DATA] = function(t, v) net.WriteUInt(t, 8) net.WriteCompressed(v) end
 net.ReadVars[TYPE_DATA] = function() return net.ReadCompressed() end
+
+-- Inspired by Dash
+function net.Ping(msg, plys)
+	net.Start(msg)
+	if CLIENT then
+		net.SendToServer()
+	else
+		net.Send(plys)
+	end
+end
