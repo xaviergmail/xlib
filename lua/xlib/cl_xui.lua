@@ -21,59 +21,72 @@ end)
 
 module("xui", package.seeall)
 
-function H()
-	return math.min(ScrH(), 768)
+function Setup(baseX, baseY, opt)
+	opt = opt or {}
+
+	local data
+	local fenv
+	if not opt.nofenv then
+		data = {}
+		fenv = getfenv(1)
+		setmetatable(data, {__index=fenv})
+		setfenv(1, data)
+	end
+
+	function ScrW43()
+		return 4/3 * ScrH()
+	end
+
+	function PctXF(x)
+		return x * ScrW()
+	end
+
+	function PctX(x)
+		return x * ScrW43()
+	end
+
+	function PctY(y)
+		return y * ScrH()
+	end
+
+	function ScaleXF(x)
+		return x/baseX * ScrW()
+	end
+
+	function ScaleX(x)
+		return x/baseX * ScrW43()
+	end
+
+	function ScaleY(x)
+		return x/baseY * ScrH()
+	end
+
+	function Padding(x)
+		return ScaleY((x or 1) * 5)
+	end
+
+	function Left(x) return ScaleX(x) end
+	function Right(x) return ScrW() - ScaleX(x) end
+
+	function Left43(x) return math.floor(ScrW43()/2) + ScaleX43(x) end
+	function Right43(x) return ScrW() - math.floor(ScrW43()/2) - ScaleX43(x) end
+
+	function Top(y) return ScaleY(y) end
+	function Bottom(x) return ScrH() - ScaleY(x) end
+
+	if opt and opt.extensions then
+		setfenv(opt.extensions, getfenv(1))
+		opt.extensions()
+	end
+
+	if fenv then
+		setfenv(1, fenv)
+		return data
+	end
 end
 
-function W()
-	return math.min(ScrW(), 1366)
-end
-
-function ScrW43()
-	return 4 / 3 * ScrH()
-end
-
-function ScreenScaleX(x)
-	return math.Round(x / 640 * ScrW43())
-end
-
-function ScreenScaleY(y)
-	return math.Round(y / 480 * H())
-end
-
-function ScreenScale1080X(x)
-	return math.Round(x / 1920 * W())
-end
-
-function ScreenScale1080Y(y)
-	return math.Round(y / 1080 * H())
-end
-
-function ScaleX(pct)
-	return pct/100*ScrW43()
-end
-
-function ScaleY(pct)
-	return pct/100*ScrH()
-end
-
-function OffsetX(pct)
-	return (ScrW() - ScaleX(pct))/2
-end
-
-function OffsetY(pct)
-	return (ScrH() - ScaleY(pct))/2
-end
-
-local padding = 1 -- Initialized in GM:ResolutionChanged()
-function Padding(x)
-	return (x or 1) * padding
-end
-
-hook.Add("ResolutionChanged", "ResolutionChanged_UIUtil_Padding", function()
-	padding = ScreenScale(5)
-end)
-hook.Run("ResolutionChanged")
+-- We're already in the "xui" module fenv, don't create a new one
+Setup(1920, 1080, {nofenv=true})
 
 local progressCols = {}
 local hue = {val=0}
