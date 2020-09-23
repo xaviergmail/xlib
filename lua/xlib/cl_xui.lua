@@ -146,3 +146,9 @@ function _R.Panel:Prepare(...)
 
 	hook.Run("VGUIPanelCreated", self)
 end
+
+hook.Add("VGUIPanelCreated", "xlib.onpanelcreated", function(panel)
+	if isfunction(panel.OnSizeChanged) then
+		panel:OnSizeChanged(panel:GetSize())
+	end
+end)
