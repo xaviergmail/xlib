@@ -139,3 +139,10 @@ function _R.Panel:CleanupRx()
 		end
 	end
 end
+
+_R.Panel.OPrepare = _R.Panel.OPrepare or _R.Panel.Prepare
+function _R.Panel:Prepare(...)
+	_R.Panel.OPrepare(self, ...)
+
+	hook.Run("VGUIPanelCreated", self)
+end
