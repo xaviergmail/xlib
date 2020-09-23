@@ -17,4 +17,3 @@ DevCommand("unblock_cvars", function()
 		end
 	end
 end, true)
-print("hi")
