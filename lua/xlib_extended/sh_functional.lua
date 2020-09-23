@@ -83,19 +83,24 @@ f.bind = function(obj, key, ...)
 	return f.apply(obj[key], obj, ...)
 end
 
--- Chain a series of calls from a single function call
-f.pipe = function(...)
-	local funcs = {...}
+local function pipeHandler(funcs, stopOnNil)
 	local state
-
 	return function(init)
 		state = init
 		for _, fn in ipairs(funcs) do
 			state = f.toFunction(fn)(state)
+			if state == nil and stopOnNil then
+				return
+			end
 		end
 		return state
 	end
 end
+
+-- Chain a series of calls from a single function call
+f.pipe = function(...) return pipeHandler({...}, false) end
+f.pipeNoNil = function(...) return pipeHandler({...}, true) end
+
 
 f.call   = function (fn, ...) return fn (...) end
 f.curry  = function (fn, a) return fn (a) end
