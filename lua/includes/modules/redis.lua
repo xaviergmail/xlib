@@ -68,9 +68,11 @@ end
 -- Internal
 function REDIS_CLIENT:OnDisconnected()
 	if (not hook.Call('RedisClientDisconnected', nil, self)) then
-		timer.Create('RedisClientRetryConnect', 1, 0, function()
+		self:Log('Connection Lost.')
+		local id = tostring(self)
+		timer.Create('RedisClientRetryConnect' .. id, 1, 0, function()
 			if (not IsValid(self)) or self:TryConnect(self.Hostname, self.Port, self.Password, self.Database) then
-				timer.Destroy('RedisClientRetryConnect')
+				timer.Destroy('RedisClientRetryConnect' .. id)
 			end
 		end)
 	end
@@ -382,9 +384,11 @@ end
 
 function REDIS_SUBSCRIBER:OnDisconnected()
 	if (not hook.Call('RedisSubscriberDisconnected', nil, self)) then
-		timer.Create('RedisSubscriberRetryConnect', 1, 0, function()
+		self:Log('Connection Lost.')
+		local id = tostring(self)
+		timer.Create('RedisSubscriberRetryConnect' .. id, 1, 0, function()
 			if (not IsValid(self)) or self:TryConnect(self.Hostname, self.Port) then
-				timer.Destroy('RedisSubscriberRetryConnect')
+				timer.Destroy('RedisSubscriberRetryConnect' .. id)
 			end
 		end)
 	end

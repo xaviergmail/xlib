@@ -15,6 +15,8 @@ f.toFunction = function (func)
 		end
 	elseif type (func) == "string" then
 		return f [func]
+	else
+		return f.value(func)
 	end
 end
 
@@ -81,7 +83,23 @@ f.bind = function(obj, key, ...)
 	return f.apply(obj[key], obj, ...)
 end
 
-f.call   = function (f, ...) return f (...) end
+-- Chain a series of calls from a single function call
+f.pipe = function(...)
+	local funcs = {...}
+	local state
+
+	return function(init)
+		state = init
+		for _, fn in ipairs(funcs) do
+			state = f.toFunction(fn)(state)
+		end
+		return state
+	end
+end
+
+f.call   = function (fn, ...) return fn (...) end
+f.curry  = function (fn, a) return fn (a) end
+f.value	 = function (f) return f end
 f.concat = table.concat
 
 f.index = function (t, k)
