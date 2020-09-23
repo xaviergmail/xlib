@@ -69,6 +69,7 @@ netwrapper.Delay      = CreateConVar( "netwrapper_request_delay", 1, bit.bor( FC
 netwrapper.MaxRequests = CreateConVar( "netwrapper_max_requests",  -1, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ), "The number of requests a client can send when an entity does not have a value stored at the requested key" )
 
 
+-- I'm not sure why but indices < 127 seem to conflict and/or not network properly?
 netwrapper.PIDOffset = 10000000
 _E.NWIndex = _E.EntIndex
 
