@@ -1,5 +1,5 @@
 --[[
- * Copyright (c) 2015-2020 Iryont <https://github.com/iryont/lua-struct>
+ * Copyright (c) 2015-2019 Iryont <https://github.com/iryont/lua-struct>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -56,7 +56,7 @@ function struct.pack(format, ...)
   local endianness = true
 
   for i = 1, format:len() do
-    local opt = format:sub(i, i):gsub('z', 's')
+    local opt = format:sub(i, i)
 
     if opt == '<' then
       endianness = true
@@ -124,29 +124,47 @@ function struct.pack(format, ...)
       table.insert(stream, string.char(0))
     elseif opt == 'c' then
       local n = format:sub(i + 1):match('%d+')
-      local str = tostring(table.remove(vars, 1))
-      local len = tonumber(n)
-      if len <= 0 then
-        len = str:len()
+      local length = tonumber(n)
+
+      if length > 0 then
+        local str = tostring(table.remove(vars, 1))
+        if length - str:len() > 0 then
+          str = str .. string.rep(' ', length - str:len())
+        end
+        table.insert(stream, str:sub(1, length))
       end
-      if len - str:len() > 0 then
-        str = str .. string.rep(' ', len - str:len())
-      end
-      table.insert(stream, str:sub(1, len))
       i = i + n:len()
+    elseif opt == 'z' then
+      local n = 4
+      local str = tostring(table.remove(vars, 1))
+
+      local bytes = {}
+      local len = str:len()
+      for j = 1, n do
+        table.insert(bytes, string.char(len % (2 ^ 8)))
+        len = math.floor(len / (2 ^ 8))
+      end
+
+      if not endianness then
+        table.insert(stream, string.reverse(table.concat(bytes)))
+      else
+        table.insert(stream, table.concat(bytes))
+      end
+
+      table.insert(stream, str)
     end
   end
 
   return table.concat(stream)
 end
 
-function struct.unpack(format, stream, pos)
+function struct.unpack(format, stream)
   local vars = {}
-  local iterator = pos or 1
+  local iterator = 1
   local endianness = true
 
   for i = 1, format:len() do
-    local opt = format:sub(i, i):gsub('z', 's')
+    local opt = format:sub(i, i)
 
     if opt == '<' then
       endianness = true
@@ -171,7 +189,7 @@ function struct.unpack(format, stream, pos)
         val = val - 2 ^ (n * 8)
       end
 
-      table.insert(vars, math.floor(val))
+      table.insert(vars, val)
     elseif opt:find('[fd]') then
       local n = (opt == 'd') and 8 or 4
       local x = stream:sub(iterator, iterator + n - 1)
@@ -201,7 +219,7 @@ function struct.unpack(format, stream, pos)
     elseif opt == 's' then
       local bytes = {}
       for j = iterator, stream:len() do
-        if stream:sub(j) == '' then
+        if stream:sub(j, j) == string.char(0) then
           break
         end
 
@@ -213,14 +231,30 @@ function struct.unpack(format, stream, pos)
       table.insert(vars, str)
     elseif opt == 'c' then
       local n = format:sub(i + 1):match('%d+')
-      local len = tonumber(n)
-      if len <= 0 then
-        len = table.remove(vars)
+      table.insert(vars, stream:sub(iterator, iterator + tonumber(n)-1))
+      iterator = iterator + tonumber(n)
+      i = i + n:len()
+    elseif opt == 'z' then
+      local n = 4
+      local signed = false
+
+      local len = 0
+      for j = 1, n do
+        local byte = string.byte(stream:sub(iterator, iterator))
+        if endianness then
+          len = len + byte * (2 ^ ((j - 1) * 8))
+        else
+          len = len + byte * (2 ^ ((n - j) * 8))
+        end
+        iterator = iterator + 1
       end
 
-      table.insert(vars, stream:sub(iterator, iterator + len - 1))
-      iterator = iterator + len
-      i = i + n:len()
+      if signed and len >= 2 ^ (n * 8 - 1) then
+        len = len - 2 ^ (n * 8)
+      end
+
+      table.insert(vars, stream:sub(iterator, iterator + tonumber(len)-1))
+      iterator = iterator + tonumber(len)
     end
   end
 
