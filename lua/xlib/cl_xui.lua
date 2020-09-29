@@ -147,8 +147,17 @@ function _R.Panel:Prepare(...)
 	hook.Run("VGUIPanelCreated", self)
 end
 
+function _R.Panel:Resize()
+	if isfunction(self.OnScreenSizeChanged) then
+		self:OnScreenSizeChanged(ScrW(), ScrH())
+	end
+end
+
 hook.Add("VGUIPanelCreated", "xlib.onpanelcreated", function(panel)
-	if isfunction(panel.OnSizeChanged) then
-		panel:OnSizeChanged(panel:GetSize())
+	if isfunction(panel.OnScreenSizeChanged) then
+		panel:OnScreenSizeChanged(ScrW(), ScrH())
+		if not panel.Resize then
+			panel.Resize = panel.OnScreenSizeChanged
+		end
 	end
 end)
