@@ -28,4 +28,16 @@ else
 		end
 		return self:GetNW2String("SteamID64", self:OldSteamID64())
 	end
+
+	_P.OldName = _P.OldName or _P.Name
+	function _P:Name()
+		if self:IsBot() then return "Bot"..self:EntIndex() end
+		return self:OldName()
+	end
+
+	_P.OldNick = _P.OldNick or _P.Nick
+	function _P:Nick()
+		if self:IsBot() then return self:Name() end
+		return self:OldNick()
+	end
 end
