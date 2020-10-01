@@ -11,33 +11,13 @@ if SERVER then
 		end
 	end)
 else
-	_P.OldSteamID  = _P.OldSteamID or _P.SteamID
+	_P.OldSteamIDMR  = _P.OldSteamIDMR or _P.SteamID
 	function _P:SteamID()
-		if self:IsBot() then
-			-- https://developer.valvesoftware.com/wiki/SteamID
-			-- STEAM_4 - Universe 4 is the "dev" universe. Won't collide.
-			return "STEAM_4:0:"..self:EntIndex()
-		end
-		return self:GetNW2String("SteamID", self:OldSteamID())
+		return self:GetNW2String("SteamID", self:OldSteamIDMR())
 	end
 
-	_P.OldSteamID64  = _P.OldSteamID64 or _P.SteamID64
+	_P.OldSteamID64MR  = _P.OldSteamID64MR or _P.SteamID64
 	function _P:SteamID64()
-		if self:IsBot() then
-			return util.SteamIDTo64(self:SteamID()) 
-		end
-		return self:GetNW2String("SteamID64", self:OldSteamID64())
-	end
-
-	_P.OldName = _P.OldName or _P.Name
-	function _P:Name()
-		if self:IsBot() then return "Bot"..self:EntIndex() end
-		return self:OldName()
-	end
-
-	_P.OldNick = _P.OldNick or _P.Nick
-	function _P:Nick()
-		if self:IsBot() then return self:Name() end
-		return self:OldNick()
+		return self:GetNW2String("SteamID64", self:OldSteamID64MR())
 	end
 end
