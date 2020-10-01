@@ -30,17 +30,25 @@ function longprint(...)
 	Msg("\n")
 end
 
-local function luacmd(ply, cmd, args, argstr)
-	local env = { print = longprint }
+local function run_lua(ply, lua, requester)
+	local env = { }
 	if IsValid(ply) then
 		env.me = ply
 		env.metr = ply:GetEyeTrace()
+		env.wep = ply:GetActiveWeapon()
 		env.metrent = env.metr.Entity
+		env.xlib_lua_running = true
 		if SERVER then
 			env.print = function(...)
 				net.Start("luaoutput")
 				net.WriteCompressed(concat(...))
 				net.Send(ply)
+			end
+		else
+			if requester then
+
+			else
+				env.print = longprint
 			end
 		end
 	end
@@ -58,9 +66,9 @@ local function luacmd(ply, cmd, args, argstr)
 	})
 
 	local id = (IsValid(ply) and ply:SteamID() or "CONSOLE")..".lua"
-	local fn, err = CompileString("return " .. argstr, id, false)
+	local fn, err = CompileString("return " .. lua, id, false)
 	if not isfunction(fn) then
-		fn, err = CompileString(argstr, id, false)
+		fn, err = CompileString(lua, id, false)
 		if not isfunction(fn) then
 			env.print("Could not compile:", err)
 			return
@@ -85,6 +93,10 @@ local function luacmd(ply, cmd, args, argstr)
 	end
 end
 
+local function luacmd(ply, cmd, args, argstr)
+	run_lua(ply, argstr)
+end
+
 function DevCommand(cmd, fn, realm)
 	realm = realm or SERVER
 	concommand.Remove(cmd)
@@ -100,9 +112,29 @@ end
 
 if SERVER then
 	util.AddNetworkString("luaoutput")
+	util.AddNetworkString("lua_run")
+	net.Receive("luaoutput", function(l, ply)
+		local requester_id = net.ReadUInt(16)	
+
+		local requester = Player(requester_id)
+		local str = "\nLua output for "..ply..":\n"..net.ReadCompressed()
+		if not IsValid(requester) or not hook.Run("CanRunDevCommand", requester, "Luaoutput Receive") or (CLIENT and requester == LocalPlayer()) then
+			longprint(str)
+		else
+			net.Start("luaoutput")
+			net.WriteCompressed(str)
+			net.Send(requester)
+		end
+	end)
 else
 	net.Receive("luaoutput", function()
 		longprint(net.ReadCompressed())
+	end)
+
+	net.Receive("lua_run", function()
+		local requester = net.ReadUInt(16)	
+		local code = net.ReadCompressed()
+		run_lua(LocalPlayer(), code, requester)
 	end)
 end
 
@@ -153,8 +185,51 @@ function all(tbl)
 	return setmetatable({items=tbl}, mt)
 end
 
+local function run_lua_ply(ply, code, requester)
+	if not code then return end
+
+	net.Start("lua_run")
+	net.WriteUInt(IsValid(requester) and requester:UserID() or 0, 16)
+	net.WriteCompressed(code)
+
+	if IsValid(ply) then
+		net.Send(ply)
+		print("hi")
+	else
+		print("broadcast uwu")
+		net.Broadcast()
+	end
+end
+
 DevCommand("lua", luacmd)
 DevCommand("luacl", luacmd, CLIENT)
+
+DevCommand("luash", function(ply, cmd, args, argstr)
+	run_lua(ply, argstr)
+	run_lua_ply(ply, argstr, ply)
+end)
+
+DevCommand("luashall", function(ply, cmd, args, argstr)
+	run_lua(ply, argstr)
+	run_lua_ply(nil, argstr, ply)
+end)
+
+DevCommand("luaplall", function(ply, cmd, args, argstr)
+	run_lua_ply(nil, argstr, ply)
+end)
+
+DevCommand("luapl", function(ply, cmd, args, argstr)
+	local targetid = args[1]
+	local target = Player(targetid) 
+	if not IsValid(target) then
+		ply:ChatPrint("Please specify a UserID() as the first argument")
+	end
+
+	argstr = argstr:sub(argstr:find(" ") + 1)
+
+	run_lua_ply(target, argstr, ply)
+end)
+
 
 DevCommand("manybots", function()
 	for i=0, 10 do
