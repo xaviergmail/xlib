@@ -554,3 +554,43 @@ function netwrapper.ClearData( id )
 		net.Broadcast()
 	end
 end
+
+
+
+
+--[[ -------------------------------------------------------------------------
+--
+--	netwrapper.ClearAllData( everything )
+--
+--	Clears stored data for all non-world and non-player entities unless everything=true
+--]]--
+
+-- TODO: This doesn't account for game.CleanUpMap's filter parameter. Use batch remove instead.
+function netwrapper.ClearAllData( everything )
+	local function entsToKeep(id)
+		return id == 0 or id > netwrapper.PIDOffset
+	end 
+	
+	local clear = { "ents", "requests", "hooks", }
+	for _, key in pairs(clear) do
+		netwrapper[ key ] = everything and {} or f.filter( entsToKeep, netwrapper[ key ] )
+	end
+
+	-- We need to clear regardless of whether CleanUpMap gets networked or not
+	if SERVER then
+		net.Start( "NetWrapperClearAll" )
+		net.WriteBool( everything )
+		net.Broadcast()
+	end
+end
+
+
+netwrapper.cleaningup = false
+hook.Add( "PreCleanUpMap", "NetWrapperClear", function( ent )
+	netwrapper.cleaningup = true
+	netwrapper.ClearAllData()
+end )
+
+hook.Add( "PostCleanUpMap", "NetWrapperClear", function( ent )
+	netwrapper.cleaningup = false
+end )

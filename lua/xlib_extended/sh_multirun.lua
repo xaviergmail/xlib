@@ -11,13 +11,13 @@ if SERVER then
 		end
 	end)
 else
-	_P.OldSteamID  = _P.OldSteamID or _P.SteamID
+	_P.OldSteamIDMR  = _P.OldSteamIDMR or _P.SteamID
 	function _P:SteamID()
-		return self:GetNW2String("SteamID", self:OldSteamID())
+		return self:GetNW2String("SteamID", self:OldSteamIDMR())
 	end
 
-	_P.OldSteamID64  = _P.OldSteamID64 or _P.SteamID64
+	_P.OldSteamID64MR  = _P.OldSteamID64MR or _P.SteamID64
 	function _P:SteamID64()
-		return self:GetNW2String("SteamID64", self:OldSteamID64())
+		return self:GetNW2String("SteamID64", self:OldSteamID64MR())
 	end
 end

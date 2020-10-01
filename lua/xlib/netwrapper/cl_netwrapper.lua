@@ -223,6 +223,16 @@ net.Receive( "NetWrapperClear", function( bits )
 	netwrapper.ClearData( id )
 end )
 
+--[[ -------------------------------------------------------------------------
+--
+--	Net - NetWrapperClearAll
+--
+--	Removes all data stored on entities in case of game.CleanUpMap()
+--]]--
+net.Receive( "NetWrapperClearAll", function( bits )
+	netwrapper.ClearAllData(net.ReadBool())
+end )
+
 
 --[[ -------------------------------------------------------------------------
 --	CLIENT VARS WRAPPER
