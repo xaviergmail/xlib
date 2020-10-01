@@ -175,8 +175,14 @@ function Query:run(...)
 				local t = TypeID(v)
 				if t == table.NIL then
 					query:setNull(k)
-				elseif XLIB.tonumber_s(v) then
-					query:setNumber(k, XLIB.tonumber_s(v))
+				elseif isnumber(v) then
+					if XLIB.tonumber_s(v) then
+						query:setNumber(k, XLIB.tonumber_s(v))
+					else
+						-- MysqlOO only supports 32-bit integers! pass as a string and cast within your query!
+						XLIB.WarnTrace("GDBC: 64-bit integer being converted to string, check documentation!")
+						query:SetString(k, XLIB.tostring_num(v))
+					end
 				elseif isbool(v) then
 					query:setBool(k, v)
 				elseif isstring(v) then

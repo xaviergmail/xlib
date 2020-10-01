@@ -21,6 +21,15 @@ function XLIB.tonumber_s(str)
 	return num
 end
 
+--- Integer-safe tostring
+--
+-- This function will return convert a number to a string without scientific notation.
+-- @treturn string The Lua number represented as a string
+function XLIB.tostring_num(num)
+	return string.format("%.0f", num)
+end
+
+
 --- Freezes an entity in place
 --
 -- This sets the entity's movetype to `MOVETYPE_NONE` and disables
