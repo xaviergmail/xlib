@@ -41,6 +41,7 @@ local FindMetaTable = FindMetaTable
 util.AddNetworkString( "NetWrapperVar" )
 util.AddNetworkString( "NetWrapperRequest" )
 util.AddNetworkString( "NetWrapperClear" )
+util.AddNetworkString( "NetWrapperClearAll" )
 
 local ENTITY = FindMetaTable( "Entity" )
 
@@ -242,7 +243,7 @@ end
 --   for re-assignment in case the player reconnects.
 --]]--
 hook.Add( "EntityRemoved", "NetWrapperClear", function( ent )
-
+	-- TODO: Batch this to send once per tick rather than several times for batch removals
 	if ( ent:IsPlayer() ) then
 		netwrapper.plypersistence[ ent:SteamID() ] = {
 			netwrapper.FilterPersistentVars( netwrapper.ents[ ent:NWIndex() ] ),
@@ -256,7 +257,7 @@ end )
 
 --[[ -------------------------------------------------------------------------
 --
--- 	Hook - EntityRemoved( entity )
+-- 	Hook - OnEntityCreated( entity )
 --
 -- 	Called when an entity has been created. This will automatically restore any
 --   NetVars / NetRequests on players whose keys were saved by
