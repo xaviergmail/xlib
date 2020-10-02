@@ -194,9 +194,7 @@ local function run_lua_ply(ply, code, requester)
 
 	if IsValid(ply) then
 		net.Send(ply)
-		print("hi")
 	else
-		print("broadcast uwu")
 		net.Broadcast()
 	end
 end

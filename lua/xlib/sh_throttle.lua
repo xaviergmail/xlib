@@ -4,7 +4,7 @@ local active = XLIB.ActiveThrottles
 local function concat(t)
 	local s = ""
 	for _, v in ipairs(t) do
-		s = s .. "." .. tostring(t)
+		s = s .. "." .. tostring(v)
 	end
 
 	return s:Trim()
