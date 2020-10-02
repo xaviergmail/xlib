@@ -61,6 +61,7 @@ function XLIB.CompareString(cmpa, cmpb)
 		if cmpa[i] != cmpb[i] then
 			local inspectLen = 30
 			local back = math.min(i, inspectLen)
+			reason = reason .. "Strings differed at column "..i.."\n"
 			reason = reason ..  "A: "..cmpa:sub((i-back + 1), i+inspectLen).."\n"..
 								(" "):rep(back+2).."|\n".. 
 								"B: "..cmpb:sub((i-back + 1), i+inspectLen)
