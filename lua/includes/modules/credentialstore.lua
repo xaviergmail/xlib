@@ -11,7 +11,7 @@ if not file.Exists(credential_store, "GAME") then
 end
 
 if not file.Exists(credential_store, "GAME") then
-	error(fmterr("You need CREDENTIAL_STORE.txt inside the garrysmod folder!"))
+	ErrorNoHalt(fmterr("You need CREDENTIAL_STORE.txt inside the garrysmod folder!"))
 end
 
 local defaults = {
@@ -30,23 +30,28 @@ local mt = {
 	end
 }
 
-local creds = util.KeyValuesToTable(file.Read(credential_store, "GAME"))
+local creds
+local function load()
+	creds = util.KeyValuesToTable(file.Read(credential_store, "GAME"))
 
-if creds.CHECK then
-	error('"CHECK" is a reserved path in '..credential_store..'. Please rename your configuration to something else.')
+	if creds.CHECK then
+		error('"CHECK" is a reserved path in '..credential_store..'. Please rename your configuration to something else.')
+	end
+
+	-- Use CREDENTIALS.CHECK to quietly check if a feature is enabled or disabled
+	-- without printing a warning message to the console when it isn't set.
+	creds.CHECK = creds
+
+	_G.CREDENTIALS = setmetatable(creds, mt)
 end
 
--- Use CREDENTIALS.CHECK to quietly check if a feature is enabled or disabled
--- without printing a warning message to the console when it isn't set.
-
-creds.CHECK = creds
-_G.CREDENTIALS = setmetatable(creds, mt)
+load()
 
 if creds.extended then
 	SetGlobalBool("development_mode", CREDENTIALS.development_mode == 1)
 	SetGlobalBool("xlib_extended", CREDENTIALS.extended == 1)
 	XLIB.Extended = true
+	XLIB.PostInitialize(function()
+		DevCommand("credentialstore.reload", load)
+	end)
 end
-
-module ("credentialstore")
-credentials = creds
