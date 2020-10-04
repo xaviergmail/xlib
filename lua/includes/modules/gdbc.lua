@@ -234,6 +234,7 @@ function Query:run(...)
 	end
 
 	function query.onAborted(q)
+		return q:onError("Query was aborted! Traceback:\n"..debug.traceback(), sql)
 	end
 
 	function query.onError(q, err, sql)
