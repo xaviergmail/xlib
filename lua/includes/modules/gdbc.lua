@@ -786,6 +786,7 @@ local env = setmetatable({
 	table=table,
 	connect=connect,
 	migration=migration,
+	G=_G,
 }, {__index=_G})
 
 local g = _G
