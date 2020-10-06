@@ -786,6 +786,7 @@ local env = setmetatable({
 	table=table,
 	connect=connect,
 	migration=migration,
+	G=_G,
 }, {__index=_G})
 
 local g = _G
@@ -793,21 +794,26 @@ function GDBC.LoadSchema(fname)
 	setfenv(CompileFile(fname), env)()
 end
 
-function GDBC.InitSchemas()
+function GDBC.InitSchemas(migrate)
 	local succ, err = xpcall(hook.Run, debug.traceback, "GDBC:InitSchemas")
 
 	if not succ then
 		ErrorNoHalt("GDBC:InitSchemas failed "..err)
 	end
+
+	if migrate then
+		for k, v in pairs(DB.__schemas) do
+			perform_migrations(v)
+		end
+	end
 end
-DevCommand("gdbc_reload", GDBC.InitSchemas)
+DevCommand("gdbc_reload", function(ply, cmd, args)
+	GDBC.InitSchemas(args[1])
+end)
+
 
 hook.Add("Initialize", "InitSchemas", function()
-	GDBC.InitSchemas()
-
-	for k, v in pairs(DB.__schemas) do
-		perform_migrations(v)
-	end
+	GDBC.InitSchemas(true)
 
 	RunConsoleCommand("sv_hibernate_think", 1)
 
