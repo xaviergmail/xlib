@@ -57,7 +57,7 @@ function longprint(...)
 	Msg("\n")
 end
 
-local function dir(obj)
+function dir(obj)
 	local mt = getmetatable(obj)
 
 	local build, seen, tmp = f.list{}, {}, {}
