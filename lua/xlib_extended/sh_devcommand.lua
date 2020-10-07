@@ -57,7 +57,7 @@ function longprint(...)
 	Msg("\n")
 end
 
-local function dir(obj)
+function dir(obj)
 	local mt = getmetatable(obj)
 
 	local build, seen, tmp = f.list{}, {}, {}
@@ -105,6 +105,7 @@ local function run_lua(ply, lua, requester)
 		env.wep = ply:GetActiveWeapon()
 		env.veh = IsValid(ply:GetVehicle()) and ply:GetVehicle() or nil
 		env.dir = dir
+		env.plys = all(player.GetAll())
 		env.xlib_lua_running = true
 		if SERVER then
 			env.print = function(...)
