@@ -11,6 +11,33 @@ local function concat(...)
 	return s:Trim()
 end
 
+
+local REALM = { CLIENT = 1, SERVER = 2, OTHER = 3 }
+local state = (LocalPlayer == nil) and REALM.SERVER or REALM.CLIENT
+local colors = {
+	[REALM.SERVER] = Color(209, 247, 255),
+	[REALM.CLIENT] = Color(255, 251, 209),
+	[REALM.OTHER] = Color(250, 224, 255),
+}
+
+local ctx = state
+
+requested = {}
+
+local function plid(ply)
+	return IsValid(ply) and ply:UserID() or 0
+end
+
+local function allowRequests(requesterid, senderid)
+	requested[requesterid] = requested[requesterid] or {}
+	requested[requesterid][senderid] = CurTime() + 60
+end
+
+local function isAllowed(requesterid, senderid)
+	local t = requested[requesterid][senderid] or math.huge
+	return requested[requesterid] and CurTime() <= (requested[requesterid][senderid] or math.huge)
+end
+
 function longprint(...)
 	local s = ""
 	if select("#", ...) > 1 then
@@ -24,33 +51,86 @@ function longprint(...)
 	local len = #s
 	local incr = 1024
 	for i=1, len, incr do
-		MsgC(color_white, s:sub(i, i+incr-1))
+		MsgC(colors[ctx], s:sub(i, i+incr-1))
 	end
 
 	Msg("\n")
 end
+
+local function dir(obj)
+	local mt = getmetatable(obj)
+
+	local build, seen, tmp = f.list{}, {}, {}
+	local function add(k)
+		if not seen[k] then
+			table.insert(tmp, k)
+			seen[k] = true
+		end
+	end
+
+	local function process(name, tbl)
+		tmp = {}
+		f.map(add, f.keys(tbl))
+
+		if #tmp > 0 then
+			table.sort(tmp)
+			table.insert(build, ("%s:"):format(name))
+			table.insert(build, "-  "..tostring(f.list(tmp)))
+		end
+	end
+
+	if istable(obj) then
+		process("table", obj)
+	end
+
+	if mt then
+		if istable(mt.__index) then
+			process("__index", mt.__index)
+		end
+
+		-- Some userdata put their indices directly on their metatable
+		process("metatable", mt)
+	end
+
+	return unpack(build)	
+end
+
 
 local function run_lua(ply, lua, requester)
 	local env = { }
 	if IsValid(ply) then
 		env.me = ply
 		env.metr = ply:GetEyeTrace()
-		env.wep = ply:GetActiveWeapon()
 		env.metrent = env.metr.Entity
+		env.wep = ply:GetActiveWeapon()
+		env.veh = IsValid(ply:GetVehicle()) and ply:GetVehicle() or nil
+		env.dir = dir
 		env.xlib_lua_running = true
 		if SERVER then
 			env.print = function(...)
 				net.Start("luaoutput")
+				net.WriteUInt(REALM.SERVER, 4)
+				net.WriteUInt(plid(ply), 16)
 				net.WriteCompressed(concat(...))
 				net.Send(ply)
 			end
 		else
-			if requester then
-
+			if requester and requester != LocalPlayer():UserID() then
+				env.print = function(...)
+					net.Start("luaoutput")
+					net.WriteUInt(REALM.OTHER, 4)
+					net.WriteUInt(requester, 16)
+					net.WriteCompressed(concat(...))
+					net.SendToServer()
+				end
 			else
+				ctx = REALM.CLIENT
 				env.print = longprint
 			end
 		end
+	else
+		ctx = REALM.SERVER
+		env.print = longprint
 	end
 
 	env.Msg = env.print
@@ -85,7 +165,7 @@ local function run_lua(ply, lua, requester)
 			if r == table.NIL then
 				env.print('nil')
 			elseif istable(r) and not f.islist(r) then
-				env.print(r, ": PrintTable v\n", SPrintTable(r, 0, r, false))
+				env.print(r, ": PrintTable v\n"..SPrintTable(r, 0, r, false))
 			else
 				env.print(r)
 			end
@@ -103,40 +183,57 @@ function DevCommand(cmd, fn, realm)
 	if realm ~= nil and not realm then return end
 
 	concommand.Add(cmd, function(ply, cmd, args, argstr)
-		local override = hook.Run("CanRunDevCommand", ply, cmd, args, argstr) == true
-		if override or not IsValid(ply) or (ply.IsDeveloper and ply:IsDeveloper()) then
+		if XLIB.IsDeveloper(ply) then
 			fn(ply, cmd, args, argstr)
 		end
 	end)
 end
 
+function XLIB.IsDeveloper(ply)
+	if not IsValid(ply) then return true end
+	local override = hook.Run("CanRunDevCommand", ply, cmd, args, argstr) == true
+	return override or (ply.IsDeveloper and ply:IsDeveloper())
+end
+
+
 if SERVER then
 	util.AddNetworkString("luaoutput")
 	util.AddNetworkString("lua_run")
-	net.Receive("luaoutput", function(l, ply)
-		local requester_id = net.ReadUInt(16)	
-
-		local requester = Player(requester_id)
-		local str = "\nLua output for "..ply..":\n"..net.ReadCompressed()
-		if not IsValid(requester) or not hook.Run("CanRunDevCommand", requester, "Luaoutput Receive") or (CLIENT and requester == LocalPlayer()) then
-			longprint(str)
-		else
-			net.Start("luaoutput")
-			net.WriteCompressed(str)
-			net.Send(requester)
-		end
-	end)
 else
-	net.Receive("luaoutput", function()
-		longprint(net.ReadCompressed())
-	end)
-
 	net.Receive("lua_run", function()
 		local requester = net.ReadUInt(16)	
 		local code = net.ReadCompressed()
 		run_lua(LocalPlayer(), code, requester)
 	end)
 end
+
+net.Receive("luaoutput", function(l, ply)
+	local realm = net.ReadUInt(4)
+	local requester_id = net.ReadUInt(16)
+
+	local str = net.ReadCompressed()
+	local requester = Player(requester_id)
+
+	if SERVER and not isAllowed(requester_id, plid(ply)) or not XLIB.IsDeveloper(requester) then
+		local msg = SPrint(ply, "sent lua_output of length", l, "to requester who didn't request:", requester_id, requester, "IsDev", XLIB.IsDeveloper(requester))
+		XLIB.Warn(msg)
+		hook.Run("Log::Report", { text = msg, ply = ply })
+		return
+	end
+
+	local pstr = "Lua output for "..tostring(ply)..":\n"..str
+
+	if CLIENT or requester_id == 0 then
+		ctx = realm
+		longprint(CLIENT and str or pstr)
+	elseif SERVER then
+		net.Start("luaoutput")
+		net.WriteUInt(REALM.OTHER, 4)
+		net.WriteUInt(requester_id, 16)
+		net.WriteCompressed(pstr)
+		net.Send(requester)
+	end
+end)
 
 
 local mt = {}
@@ -188,13 +285,18 @@ end
 local function run_lua_ply(ply, code, requester)
 	if not code then return end
 
+	local rqid = plid(requester)
 	net.Start("lua_run")
-	net.WriteUInt(IsValid(requester) and requester:UserID() or 0, 16)
+	net.WriteUInt(rqid, 16)
 	net.WriteCompressed(code)
 
 	if IsValid(ply) then
+		allowRequests(rqid, plid(ply))
 		net.Send(ply)
 	else
+		for k, v in pairs(player.GetAll()) do
+			allowRequests(rqid, plid(v))
+		end
 		net.Broadcast()
 	end
 end
@@ -218,14 +320,29 @@ end)
 
 DevCommand("luapl", function(ply, cmd, args, argstr)
 	local targetid = args[1]
-	local target = Player(targetid) 
+	local target = Player(targetid)
 	if not IsValid(target) then
 		ply:ChatPrint("Please specify a UserID() as the first argument")
+		return
 	end
 
 	argstr = argstr:sub(argstr:find(" ") + 1)
 
 	run_lua_ply(target, argstr, ply)
+end)
+
+DevCommand("luashpl", function(ply, cmd, args, argstr)
+	local targetid = args[1]
+	local target = Player(targetid)
+	if not IsValid(target) then
+		ply:ChatPrint("Please specify a UserID() as the first argument")
+		return
+	end
+
+	argstr = argstr:sub(argstr:find(" ") + 1)
+
+	run_lua_ply(target, argstr, ply)
+	run_lua(ply, argstr)
 end)
 
 

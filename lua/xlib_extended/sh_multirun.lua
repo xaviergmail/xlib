@@ -1,7 +1,9 @@
-if SERVER and not GetConVar("sv_lan"):GetBool() then
-	BlockCSLuaFile()
-	return
-end
+--[[
+	Running a client with -multirun, the server sees the steam ID as STEAM_0:0:0.
+	However, the clients still see the account owner's original Steam ID.
+
+	This workaround networks the SteamID/SteamID64 to all clients so that the server becomes trusted.
+]]
 
 if SERVER then
 	hook.Add("OnEntityCreated", "XLib multirun steamid", function(ent)
