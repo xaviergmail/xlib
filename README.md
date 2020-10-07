@@ -442,7 +442,6 @@ end
 You should only resort to this when you need dynamic control over scripts that should run immediately on Lua state initialization.
 
 Example uses of conditional networking:
-- LAN server workaround: [xlib_extended/sh_multirun.lua](lua/xlib_extended/sh_multirun.lua)
 - One-off diagnostic session: [xlib_extended/sh_delayhttp.lua](lua/xlib_extended/sh_delayhttp.lua)
 - xlib_extended itself could also be modified to benefit from this
 
