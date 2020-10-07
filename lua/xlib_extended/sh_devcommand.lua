@@ -57,6 +57,45 @@ function longprint(...)
 	Msg("\n")
 end
 
+local function dir(obj)
+	local mt = getmetatable(obj)
+
+	local build, seen, tmp = f.list{}, {}, {}
+	local function add(k)
+		if not seen[k] then
+			table.insert(tmp, k)
+			seen[k] = true
+		end
+	end
+
+	local function process(name, tbl)
+		tmp = {}
+		f.map(add, f.keys(tbl))
+
+		if #tmp > 0 then
+			table.sort(tmp)
+			table.insert(build, ("%s:"):format(name))
+			table.insert(build, "-  "..tostring(f.list(tmp)))
+		end
+	end
+
+	if istable(obj) then
+		process("table", obj)
+	end
+
+	if mt then
+		if istable(mt.__index) then
+			process("__index", mt.__index)
+		end
+
+		-- Some userdata put their indices directly on their metatable
+		process("metatable", mt)
+	end
+
+	return unpack(build)	
+end
+
+
 local function run_lua(ply, lua, requester)
 	local env = { }
 	if IsValid(ply) then
@@ -65,6 +104,7 @@ local function run_lua(ply, lua, requester)
 		env.metrent = env.metr.Entity
 		env.wep = ply:GetActiveWeapon()
 		env.veh = IsValid(ply:GetVehicle()) and ply:GetVehicle() or nil
+		env.dir = dir
 		env.xlib_lua_running = true
 		if SERVER then
 			env.print = function(...)
