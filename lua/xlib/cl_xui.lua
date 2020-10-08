@@ -61,6 +61,20 @@ function Setup(baseX, baseY, opt)
 		return x/baseY * ScrH()
 	end
 
+	-- Temporary hack for relative font sizing
+	function UnscaleXF(x)
+		return x/ScrW() * baseX
+	end
+
+	function UnscaleX(x)
+		return x/ScrW43() * baseX
+	end
+
+	function UnscaleY(x)
+		return x/ScrH() * baseY
+	end
+
+
 	function Padding(x)
 		return ScaleY((x or 1) * 5)
 	end
@@ -161,3 +175,12 @@ hook.Add("VGUIPanelCreated", "xlib.onpanelcreated", function(panel)
 		end
 	end
 end)
+
+if XLIB.Extended then
+	DevCommand("rmpanel", function()
+		local pan = vgui.GetHoveredPanel()
+		if pan and pan:IsValid() then
+			pan:Remove()
+		end
+	end, CLIENT)
+end
