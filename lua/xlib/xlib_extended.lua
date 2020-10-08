@@ -1,3 +1,5 @@
+XLIB.Extended = true
+
 if SERVER then
 	if XLIB.Extended then
 		AddCSLuaFile()

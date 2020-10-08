@@ -98,14 +98,15 @@ end
 
 local function run_lua(ply, lua, requester)
 	local env = { }
+	env.dir = dir
+	env.plys = all(player.GetAll())
+
 	if IsValid(ply) then
 		env.me = ply
 		env.metr = ply:GetEyeTrace()
 		env.metrent = env.metr.Entity
 		env.wep = ply:GetActiveWeapon()
 		env.veh = IsValid(ply:GetVehicle()) and ply:GetVehicle() or nil
-		env.dir = dir
-		env.plys = all(player.GetAll())
 		env.xlib_lua_running = true
 		if SERVER then
 			env.print = function(...)
