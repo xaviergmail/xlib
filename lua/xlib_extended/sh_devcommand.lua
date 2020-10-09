@@ -148,11 +148,22 @@ local function run_lua(ply, lua, requester)
 	})
 
 	local id = (IsValid(ply) and ply:SteamID() or "CONSOLE")..".lua"
-	local fn, err = CompileString("return " .. lua, id, false)
+
+	lua = lua:Trim()
+	local inspect = false
+	local fn
+	if lua:EndsWith("?") then
+		lua = lua:sub(1, -2)
+		fn = CompileString("return dir("..lua..")", id, false)
+	end
+
 	if not isfunction(fn) then
-		fn, err = CompileString(lua, id, false)
+		fn = CompileString("return " .. lua, id, false)
+	end
+	if not isfunction(fn) then
+		fn = CompileString(lua, id, false)
 		if not isfunction(fn) then
-			env.print("Could not compile:", err)
+			env.print("Could not compile:", fn)
 			return
 		end
 	end
