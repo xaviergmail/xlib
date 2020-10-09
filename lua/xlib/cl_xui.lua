@@ -88,6 +88,15 @@ function Setup(baseX, baseY, opt)
 	function Top(y) return ScaleY(y) end
 	function Bottom(x) return ScrH() - ScaleY(x) end
 
+	function PctLeft(x) return PctXF(x) end
+	function PctRight(x) return ScrW() - PctXF(x) end
+
+	function PctLeft43(x) return math.floor(ScrW43()/2) + PctX(x) end
+	function PctRight43(x) return ScrW() - math.floor(ScrW43()/2) - PctX(x) end
+
+	function PctTop(y) return PctY(y) end
+	function PctBottom(x) return ScrH() - PctY(x) end
+
 	if opt and opt.extensions then
 		setfenv(opt.extensions, getfenv(1))
 		opt.extensions()
