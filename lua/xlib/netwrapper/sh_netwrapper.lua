@@ -72,6 +72,12 @@ netwrapper.MaxRequests = CreateConVar( "netwrapper_max_requests",  -1, bit.bor( 
 -- I'm not sure why but indices < 127 seem to conflict and/or not network properly?
 netwrapper.PIDOffset = 10000000
 _E.NWIndex = _E.EntIndex
+function _E:NWIndex()
+	local id = self:EntIndex()
+	if id == 0 and self != game.GetWorld() then
+
+	end
+end
 
 function _P:NWIndex()
 	return self:UserID() + netwrapper.PIDOffset
