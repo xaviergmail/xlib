@@ -72,6 +72,14 @@ netwrapper.MaxRequests = CreateConVar( "netwrapper_max_requests",  -1, bit.bor( 
 -- I'm not sure why but indices < 127 seem to conflict and/or not network properly?
 netwrapper.PIDOffset = 10000000
 _E.NWIndex = _E.EntIndex
+function _E:NWIndex()
+	local id = self:EntIndex()
+	if id == 0 and self != game.GetWorld() then
+		return -1
+	else
+		return id
+	end
+end
 
 function _P:NWIndex()
 	return self:UserID() + netwrapper.PIDOffset
@@ -537,7 +545,7 @@ end
 
 local cleared = false
 local function clear( list, id )
-	cleared = list[ id ] != nil
+	cleared = cleared or list[ id ] != nil
 	list[ id ] = nil
 end
 
@@ -567,13 +575,18 @@ end
 
 -- TODO: This doesn't account for game.CleanUpMap's filter parameter. Use batch remove instead.
 function netwrapper.ClearAllData( everything )
-	local function entsToKeep(id)
-		return id == 0 or id > netwrapper.PIDOffset
-	end 
-	
-	local clear = { "ents", "requests", "hooks", }
-	for _, key in pairs(clear) do
-		netwrapper[ key ] = everything and {} or f.filter( entsToKeep, netwrapper[ key ] )
+	for _, key in pairs { "ents", "requests", "hooks", } do
+		if everything then
+			netwrapper[ key ] = {}
+		else
+			local new = {}
+			for id, data in pairs( netwrapper[ key ] ) do
+				if id == 0 or id >= netwrapper.PIDOffset then
+					new[ id ] = data
+				end
+			end
+			netwrapper[ key ] = new
+		end
 	end
 
 	-- We need to clear regardless of whether CleanUpMap gets networked or not
