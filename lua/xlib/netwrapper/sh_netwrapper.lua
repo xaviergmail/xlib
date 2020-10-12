@@ -75,7 +75,9 @@ _E.NWIndex = _E.EntIndex
 function _E:NWIndex()
 	local id = self:EntIndex()
 	if id == 0 and self != game.GetWorld() then
-
+		return -1
+	else
+		return id
 	end
 end
 
@@ -543,7 +545,7 @@ end
 
 local cleared = false
 local function clear( list, id )
-	cleared = list[ id ] != nil
+	cleared = cleared or list[ id ] != nil
 	list[ id ] = nil
 end
 
