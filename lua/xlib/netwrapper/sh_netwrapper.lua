@@ -567,13 +567,18 @@ end
 
 -- TODO: This doesn't account for game.CleanUpMap's filter parameter. Use batch remove instead.
 function netwrapper.ClearAllData( everything )
-	local function entsToKeep(id)
-		return id == 0 or id > netwrapper.PIDOffset
-	end 
-	
-	local clear = { "ents", "requests", "hooks", }
-	for _, key in pairs(clear) do
-		netwrapper[ key ] = everything and {} or f.filter( entsToKeep, netwrapper[ key ] )
+	for _, key in pairs { "ents", "requests", "hooks", } do
+		if everything then
+			netwrapper[ key ] = {}
+		else
+			local new = {}
+			for id, data in pairs( netwrapper[ key ] ) do
+				if id == 0 or id >= netwrapper.PIDOffset then
+					new[ id ] = data
+				end
+			end
+			netwrapper[ key ] = new
+		end
 	end
 
 	-- We need to clear regardless of whether CleanUpMap gets networked or not
