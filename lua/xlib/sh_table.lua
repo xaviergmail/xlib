@@ -63,3 +63,38 @@ function table.TrueRandom(tbl)
 	local n = random.RandomInt(1, #tbl)
 	return tbl[n]
 end
+
+function table.Merge2(t, base, visited)
+	visited = visited or {}
+	if visited[base] then return t end
+	visited[base] = true
+
+	for k, v in pairs(base) do
+		if (t[k] == nil and rawget(t, k) == nil) then
+			if (istable(v)) then
+				t[k] = {}
+				table.Merge2(t[k], v, visited)
+			else
+				t[k] = v
+			end
+		end
+		
+		if (istable(t[k]) && istable(v)) then
+			table.Merge2(t[k], v, visited)
+		end
+	end
+
+	return t
+end
+
+function table.Replace(old, new)
+	for k, v in pairs(old) do
+		old[k] = nil
+	end
+
+	for k, v in pairs(new) do
+		old[k] = v
+	end
+
+	return old
+end
