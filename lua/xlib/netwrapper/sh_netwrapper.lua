@@ -176,7 +176,7 @@ end
 --]]--
 function ENTITY:RemoveNetHook( key, name )
 	if ( netwrapper.clientvars[ key ] ) then
-		return self:RemoveNetHook( key, name )
+		return self:RemoveClientHook( key, name )
 	end
 
 	netwrapper.StoreNetHook( self:NWIndex(), key, name, nil )
@@ -543,26 +543,36 @@ end
 --	 and become corrupted.
 --]]--
 
-local cleared = false
-local function clear( list, id )
-	cleared = cleared or list[ id ] != nil
-	list[ id ] = nil
-end
-
+local toClear = {}
 function netwrapper.ClearData( id )
-	cleared = false
-	clear( netwrapper.ents, id )
-	clear( netwrapper.requests, id )
-	clear( netwrapper.clients, id )
-	clear( netwrapper.hooks, id )
+	for _, name in ipairs { "ents", "requests", "clients" } do
+		for k, v in pairs( netwrapper[ name ][ id ] or {} ) do
+			netwrapper.StoreNetVar( id, k, nil )
+		end
+	end
 
-	if ( SERVER and cleared ) then
-		net.Start( "NetWrapperClear" )
-			net.WriteUInt( id, 32 )
-		net.Broadcast()
+	netwrapper.hooks[ id ] = nil
+
+	if ( SERVER ) then
+		table.insert( toClear, id )
 	end
 end
 
+function netwrapper.NetworkClearToClients()
+	local count = #toClear
+	if count < 1 then return end
+
+	local pack = ("I"):rep( count )
+	local buf = struct.pack( pack, unpack( toClear ) )
+	toClear = {}
+
+	net.Start( "NetWrapperClear" )	
+	net.WriteUInt( count, 32 )
+	net.WriteCompressed( buf )
+	net.Broadcast()
+
+end
+hook.Add( "Tick", "NetWrapperClear", netwrapper.NetworkClearToClients )
 
 
 
@@ -574,6 +584,7 @@ end
 --]]--
 
 -- TODO: This doesn't account for game.CleanUpMap's filter parameter. Use batch remove instead.
+-- FIXME: This doesn't call the netwrapper hooks upon removal either
 function netwrapper.ClearAllData( everything )
 	for _, key in pairs { "ents", "requests", "hooks", } do
 		if everything then

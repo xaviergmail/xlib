@@ -219,8 +219,14 @@ end )
 --	 and become corrupted.
 --]]--
 net.Receive( "NetWrapperClear", function( bits )
-	local id = net.ReadUInt( 32 )
-	netwrapper.ClearData( id )
+	local count = net.ReadUInt( 32 )
+	local pack = ("I"):rep( count )
+	local buf = net.ReadCompressed()
+
+	local vals = { struct.unpack( pack, buf ) }
+	for _, id in ipairs( vals ) do
+		netwrapper.ClearData( id )
+	end
 end )
 
 --[[ -------------------------------------------------------------------------
