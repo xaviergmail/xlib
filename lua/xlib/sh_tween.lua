@@ -32,10 +32,10 @@ _G.tween = {
 
 -- Adapted from https://github.com/EmmanuelOga/easing. See LICENSE.txt for credits.
 -- For all easing functions:
--- t = time == how much time has to pass for the tweening to complete
+-- t = time == running time. How much time has passed *right now*
 -- b = begin == starting property value
 -- c = change == ending - beginning
--- d = duration == running time. How much time has passed *right now*
+-- d = duration ==  how much time has to pass for the tweening to complete
 
 local pow, sin, cos, pi, sqrt, abs, asin = math.pow, math.sin, math.cos, math.pi, math.sqrt, math.abs, math.asin
 
