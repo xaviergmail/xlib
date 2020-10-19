@@ -358,7 +358,9 @@ end
 --   changes on any entity.
 --]]--
 function netwrapper.AddCLNetHook( key, name, fn )
-	netwrapper.StoreNetHook( -1, netwrapper.CLNetHookPrefix .. key, name, fn )
+	XLIB.PostInitEntity(function()
+		netwrapper.StoreNetHook( -1, netwrapper.CLNetHookPrefix .. key, name, fn )
+	end)
 end
 
 --[[ -------------------------------------------------------------------------
