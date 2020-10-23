@@ -75,7 +75,7 @@ _E.NWIndex = _E.EntIndex
 function _E:NWIndex()
 	local id = self:EntIndex()
 	if id == 0 and self != game.GetWorld() then
-		return -1
+		return -2
 	else
 		return id
 	end
@@ -358,7 +358,9 @@ end
 --   changes on any entity.
 --]]--
 function netwrapper.AddCLNetHook( key, name, fn )
-	netwrapper.StoreNetHook( -1, netwrapper.CLNetHookPrefix .. key, name, fn )
+	XLIB.PostInitEntity(function()
+		netwrapper.StoreNetHook( -1, netwrapper.CLNetHookPrefix .. key, name, fn )
+	end)
 end
 
 --[[ -------------------------------------------------------------------------
@@ -545,6 +547,8 @@ end
 
 local toClear = {}
 function netwrapper.ClearData( id )
+	if id == -1 then return end
+
 	for _, name in ipairs { "ents", "requests", "clients" } do
 		for k, v in pairs( netwrapper[ name ][ id ] or {} ) do
 			netwrapper.StoreNetVar( id, k, nil )
