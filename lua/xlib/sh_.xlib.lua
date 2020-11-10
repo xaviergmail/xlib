@@ -1,5 +1,7 @@
 XLIB = XLIB or {}
 
+if CLIENT then XLIB.Extended = file.Exists("lua/xlib/xlib_extended.lua", "LUA") end
+
 function XLIB.PostInitialize(fn)
 	if GAMEMODE then
 		fn()
