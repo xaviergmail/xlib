@@ -185,11 +185,12 @@ hook.Add("VGUIPanelCreated", "xlib.onpanelcreated", function(panel)
 	end
 end)
 
-if XLIB.Extended then
+XLIB.PostInitialize(function()
+	if not XLIB.Extended then return end
 	DevCommand("rmpanel", function()
 		local pan = vgui.GetHoveredPanel()
 		if pan and pan:IsValid() then
 			pan:Remove()
 		end
 	end, CLIENT)
-end
+end)
