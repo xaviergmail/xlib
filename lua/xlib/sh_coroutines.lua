@@ -44,6 +44,11 @@ function coro_mt:finish(...)
     self:unhook()
     if isfunction(self.callback) then
         self.callback(...)
+    else
+        local succ, msg = ...
+        if not succ then
+            ErrorNoHalt("Coroutine failed", msg)
+        end
     end
 end
 
