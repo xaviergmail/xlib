@@ -98,7 +98,7 @@ end
 
 -- Add these suffixes to do different things
 local shortcuts = {
-	["?"] = "return dir(%s)",
+	["?"] = "local function f(o) return isfunction(o) and debug.getinfo(o) or dir(o) end return f(%s)",
 	["!"] = "return PrintTable((%s))",
 }
 
