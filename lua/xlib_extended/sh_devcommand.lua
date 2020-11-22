@@ -96,17 +96,28 @@ function dir(obj)
 end
 
 
+-- Add these suffixes to do different things
+local shortcuts = {
+	["?"] = "return dir(%s)",
+	["!"] = "return PrintTable((%s))",
+}
+
+
 local function run_lua(ply, lua, requester)
 	local env = { }
+
+	-- Global shorthands
 	env.dir = dir
 	env.plys = all(player.GetAll())
 
 	if IsValid(ply) then
+		-- More global shorthands
 		env.me = ply
 		env.metr = ply:GetEyeTrace()
 		env.metrent = env.metr.Entity
 		env.wep = ply:GetActiveWeapon()
 		env.veh = IsValid(ply:GetVehicle()) and ply:GetVehicle() or nil
+
 		env.xlib_lua_running = true
 		if SERVER then
 			env.print = function(...)
@@ -152,9 +163,11 @@ local function run_lua(ply, lua, requester)
 	lua = lua:Trim()
 	local inspect = false
 	local fn
-	if lua:EndsWith("?") then
-		lua = lua:sub(1, -2)
-		fn = CompileString("return dir("..lua..")", id, false)
+	for k, v in pairs(shortcuts) do
+		if lua:EndsWith(k) then
+			lua = lua:sub(1, -(k:len()+1))
+			fn = CompileString(v:format(lua), id, false)
+		end
 	end
 
 	if not isfunction(fn) then
