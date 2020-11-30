@@ -33,7 +33,7 @@ if SERVER then
 	if file.Exists("xlib_testhttp.txt", "DATA") then
 		-- Prompted to load by xlib_testhttp concommand, proceed with loading
 		file.Delete("xlib_testhttp.txt")
-	elseif CREDENTIALS.xlib_delayhttp != 1 then
+	elseif CREDENTIALS.CHECK.xlib_delayhttp != 1 then
 		BlockCSLuaFile()
 		return
 	end
