@@ -47,6 +47,35 @@ end
 net.WriteVars[TYPE_DATA] = function(t, v) net.WriteUInt(t, 8) net.WriteCompressed(v) end
 net.ReadVars[TYPE_DATA] = function() return net.ReadCompressed() end
 
+net.WriteRawVars = 
+{
+	[TYPE_STRING]		= function ( t, v )	net.WriteString( v )		end,
+	[TYPE_NUMBER]		= function ( t, v )	net.WriteDouble( v )		end,
+	[TYPE_TABLE]		= function ( t, v )	net.WriteTable( v )			end,
+	[TYPE_BOOL]			= function ( t, v )	net.WriteBool( v )			end,
+	[TYPE_ENTITY]		= function ( t, v )	net.WriteEntity( v )		end,
+	[TYPE_VECTOR]		= function ( t, v )	net.WriteVector( v )		end,
+	[TYPE_ANGLE]		= function ( t, v )	net.WriteAngle( v )			end,
+	[TYPE_MATRIX]		= function ( t, v ) net.WriteMatrix( v )		end,
+	[TYPE_COLOR]		= function ( t, v ) net.WriteColor( v )			end,
+	[TYPE_DATA]			= net.WriteVars[TYPE_DATA],
+}
+
+function net.WriteRawType( v )
+	local typeid = nil
+
+	if IsColor( v ) then
+		typeid = TYPE_COLOR
+	else
+		typeid = TypeID( v )
+	end
+
+	local wv = net.WriteRawVars[ typeid ]
+	if ( wv ) then return wv( typeid, v ) end
+	
+	error( "net.WriteRawTypeRaw: Couldn't write " .. type( v ) .. " (type " .. typeid .. ")" )
+end
+
 -- Inspired by Dash
 function net.Ping(msg, plys)
 	net.Start(msg)
