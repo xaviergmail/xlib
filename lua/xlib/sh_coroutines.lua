@@ -12,6 +12,11 @@ function coro_mt:unhook()
 end
 
 function coro_mt:step(...)
+    if self.predicate and not self.predicate() then
+        self:finish()
+        return false
+    end
+
     local ret = { coroutine.resume(self.thread, ...) }
     if coroutine.status(self.thread) == "dead" then
         self:finish(unpack(ret))
@@ -46,16 +51,32 @@ function coro_mt:finish(...)
         self.callback(...)
     else
         local succ, msg = ...
-        if not succ then
-            ErrorNoHalt("Coroutine failed", msg)
+        if succ == false then
+            ErrorNoHalt("Coroutine failed", msg.."\n")
         end
     end
 end
 
+function coro_mt:addPredicate(predicate)
+    if isfunction(predicate) then
+        self.predicate = predicate
+    elseif predicate.IsValid then
+        self.predicate = f(predicate, "IsValid")
+    end
+
+    return self
+end
+
 XLIB.Coroutine = {
     Start = function(fn, callback, _)
+        local id = tostring(fn)
+        if isstring(id) then
+            fn = callback
+            callback = _
+        end
+
         local coro = setmetatable({
-            id = "Coro."..tostring(fn),
+            id = "Coro."..id,
             thread = coroutine.create(fn),
             running = true,
             callback = callback
@@ -66,7 +87,7 @@ XLIB.Coroutine = {
         return coro
     end
 }
-setmetatable(XLIB.Coroutine, { __call=function(t, ...) XLIB.Coroutine.Start(...) end })
+setmetatable(XLIB.Coroutine, { __call=function(t, ...) return XLIB.Coroutine.Start(...) end })
 
 function XLIB.Coroutine.WaitForFile(fname, path, timeout, waitfor)
     timeout = timeout or 10
