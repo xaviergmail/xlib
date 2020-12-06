@@ -54,8 +54,14 @@ end
 
 XLIB.Coroutine = {
     Start = function(fn, callback, _)
+        local id = tostring(fn)
+        if isstring(id) then
+            fn = callback
+            callback = _
+        end
+
         local coro = setmetatable({
-            id = "Coro."..tostring(fn),
+            id = "Coro."..id,
             thread = coroutine.create(fn),
             running = true,
             callback = callback
