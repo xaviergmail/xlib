@@ -46,8 +46,8 @@ function coro_mt:finish(...)
         self.callback(...)
     else
         local succ, msg = ...
-        if not succ then
-            ErrorNoHalt("Coroutine failed", msg)
+        if succ == false then
+            ErrorNoHalt("Coroutine failed", msg.."\n")
         end
     end
 end
