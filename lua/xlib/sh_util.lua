@@ -114,3 +114,40 @@ end
 function XLIB.SafeColorNoAlpha(color)
 	return XLIB.SafeColor(color, true)
 end
+
+--- Returns the directory of a file
+--
+-- @tparam string path The file path to extract the directory of
+-- @treturn string dirname The directory containing the file (or the input string if no file extension is found)
+function XLIB.BaseDir(path)
+	local parts = path:gsub("\\", "/"):Split("/")
+	if parts[#parts]:find(".", 1, true) then
+		table.remove(parts)
+	end
+
+    local ret = table.concat(parts, "/"):gsub("/$", "")
+	return ret
+end
+
+--- Joins directory names with a filesystem path separator
+--
+-- @tparam string vararg The directory paths to combine
+-- @treturn string dirname The combined filesystem path
+function XLIB.Join(...)
+	local count = select("#", ...)
+	local build = {}
+
+	-- Account for absolute paths
+	if select(1, ...)[1] == "/" then
+		table.insert(build, "")
+	end
+
+	for i=1, count do
+		local str = select(i, ...):gsub('^[/\\]*', ''):gsub('[/\\]*$', '')
+		if str:len() > 0 then
+			table.insert(build, str)
+		end
+	end
+
+	return table.concat(build, "/")
+end
