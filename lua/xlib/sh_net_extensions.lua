@@ -77,11 +77,39 @@ function net.WriteRawType( v )
 end
 
 -- Inspired by Dash
-function net.Ping(msg, plys)
+-- net.Ping(plys | msgname, [plys], ...values)
+-- Nasty hack to maintain backwards compat of net.Ping(msg, plys)
+-- Preferred use: net.Ping([plys], msgname, ...values)
+function net.Ping(msg, ...)
+	local plys = select(1, ...)
+	if type(msg) == "Player" then
+		msg, plys = plys, msg
+	end
+
 	net.Start(msg)
+
+	local start = 1
+	local cnt = select('#', ...)
+	if type(plys) == "Player" or istable(plys) and #f.filter(f.pipe(type, f.apply(f.neq, "Player"))) > 0 then
+		start = 2
+	elseif SERVER then
+		plys = nil
+	end
+
+	if cnt >= start then
+		for i=start, cnt do
+			net.WriteRawType(select(i, ...))
+		end
+	end
+
+
 	if CLIENT then
 		net.SendToServer()
 	else
-		net.Send(plys)
+		if plys then
+			net.Send(plys)
+		else
+			net.Broadcast()
+		end
 	end
 end
