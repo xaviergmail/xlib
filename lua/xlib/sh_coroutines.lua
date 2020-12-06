@@ -66,7 +66,7 @@ XLIB.Coroutine = {
         return coro
     end
 }
-setmetatable(XLIB.Coroutine, { __call=function(t, ...) XLIB.Coroutine.Start(...) end })
+setmetatable(XLIB.Coroutine, { __call=function(t, ...) return XLIB.Coroutine.Start(...) end })
 
 function XLIB.Coroutine.WaitForFile(fname, path, timeout, waitfor)
     timeout = timeout or 10
