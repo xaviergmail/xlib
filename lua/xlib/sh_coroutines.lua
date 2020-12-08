@@ -69,10 +69,12 @@ end
 
 XLIB.Coroutine = {
     Start = function(fn, callback, _)
-        local id = tostring(fn)
+        local id = fn
         if isstring(id) then
             fn = callback
             callback = _
+        else
+            id = tostring(id)
         end
 
         local coro = setmetatable({
