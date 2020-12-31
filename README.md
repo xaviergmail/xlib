@@ -456,6 +456,52 @@ xloader("sample_addon", function(f) include(f) end)
 -- Second argument is required boilerplate to make it autorefresh-aware. View linked bug report above.
 ```
 
+## XLIB.Test
+
+This is a basic testing suite including a few nifty tools including string comparison and diff output
+
+Assertions support diff output **string** and **nested table** comparisons!
+It uses `XLIB.Compare` and `XLIB.CompareString` under the hood.
+
+- String comparisons will output pretty diff info on mismatch
+- Table comparisons will print out the first key path to differ between the two tables
+
+A _test group_ is one call to XLIB.Test. Each test group can have multiple assertions.
+
+- Players will be prevented from joining the server by a CheckPassword hook until all test _groups_ succeed
+- Note that a test group is marked as "complete" upon the first assertion. If the first assertion is truthy and subsequent failures from a timer or callback are falsy, the group will be considered as passing until a falsy assertion is made. BE CAREFUL as poorly structuring your tests could allow players to join a broken server. e.g `assert(true) timer.simple(5, function() assert(false) end)` is very bad.
+- As a rule of thumb, you should separate your synchronous and asynchronous tests into different groups, and only have one asynchronous assertion per test group.
+
+Usage:
+
+````lua
+XLIB.Test("API is reachable", function(assert, LOG, ERR)
+    -- LOG(...) -> Pretty-prints a log message to the test data
+    -- ERR(...) -> Pretty-prints an error message to the test data (DOESN'T FAIL THE TEST!)
+
+    -- assert(reason, result, [wanted])
+    -- If `result` is a boolean and compareTo is nil, `wanted` becomes the predicate to the assertion
+    -- If `wanted` is provided, XLIB.Compare or XLIB.CompareString will be used.
+
+    LOG("Running HTTP fetch")
+    http.Fetch("http://ifconfig.co/", function(body)
+        -- If this is truthy, the test group is marked as successful
+        assert("Visible server external IP is correct", body, "123.123.123.123")
+
+        -- DON'T DESIGN LIKE THIS! But be aware that the functionality does work.
+        -- As a rule of thumb, use ONE test group per asynchronous test
+        timer.Simple(60, functin()
+            -- Subsequent assertions will also be logged and lock the server if it fails.
+            assert("I decided to break everything", false)
+        end)
+
+
+    end, function(err)
+        ERR("HTTP Failed with reason", err)
+        assert("HTTP Failed", false)
+    end)
+end)
+
 ## XLIB.Timer
 This is an easy-to-use timing tool for basic profiling purposes.
 `XLIB.Time(identifier)`
