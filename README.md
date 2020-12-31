@@ -605,21 +605,51 @@ The current features include:
 This requires a function `IsDeveloper` (not provided by XLIB at this time) to be present on the Player metatable.
 Functionally similar to concommand.Add, this takes care of the boilerplate of doing concommand authentication.
 
-XLIB Extended also ships with two DevCommands: **`lua`** and **`luacl`**
+XLIB Extended also ships with a few DevCommands:
+| Command | Realm |
+| ------------- | ------------------------------------------------------------------------------------------- |
+| `lua` | Runs on the server |
+| `luacl` | Runs on your client |
+| `luash` | Runs on both client and server |
+| `luapl <PID>` | Runs on specified player's client where PID is UserID from `status` command |
+| `luaplall` | Runs client-side for all connected players |
+| `luashpl` | Runs server-side and on specified player's client where PID is UserID from `status` command |
+| `luashall` | Runs server-side and client-side for all connected players |
+| `manybots` | Spawns 10 bots |
+| `nobots` | Kicks all bost from the server |
+| `reloadmap` | Runs changelevel to the current map |
+| `testserver.toggle` | Temporarily makes `IsTestServer()` return false in a development environment |
+| `xlib_teststatus` | Prints ran tests as well as their output |
+| `xlib_cleartests` | Clears failed test status and unlocks the server |
+| `mapmanager.reload` | Reloads mapmanager settings without reloading the map |
+| `credentialstore.reload` | Reloads CREDENTIAL*STORE.txt without reloading the map |
+| `gdbc_log` | Temporarily enables GDBC logging |
+| `gdbc_reload` | Reloads all schema files (InitSchemas hook) |
+| `unblock_cvars` | Remove all FCVAR* restrictions on all cvars (requires cvarsx module). Can be ran on client and server |
+| `xlib_startuperrors` | Prints lua errors that occured during server start up |
+| `xlib_clearstartuperrors` | Clears startup lua errors and unlocks server |
+| `xlib_testhttp` | DEPRECATED - Enables logging for functions making HTTP calls before initialization and reloads the map |
+| `rmpanel` | Removes the VGUI panel under the cursor (useful if a panel becomes stuck after failing initialization) |
+
 These evaluate the passed string on either the server or client without needing RCON access or sv_allowcslua=1 respectively.
 
 When executing the server-side `lua` command, any output from `print`, `Msg`, `MsgC`, `PrintTable` will be redirected to the client's console.
 This is also true for any syntax or runtime errors.
 
+When using any command that runs on a client other than yours, the output will be piped back to the console of the initial command's runner in pink labeled with the client's name and Steam ID.
+
 It also provides some useful shorthand globals to help you avoid the low character count restriction:
 
-| Name        | Object                     |
-|-------------|----------------------------|
-| me (SERVER) | Player running the command |
-| me (CLIENT) | LocalPlayer()              |
-| metr        | me:GetEyeTrace()           |
-| metrent     | me:GetEyeTrace().Entity    |
-
+| Name          | Object                             |
+| ------------- | ---------------------------------- |
+| `me` (SERVER) | Player running the command         |
+| `me` (CLIENT) | LocalPlayer()                      |
+| `metr`        | me:GetEyeTrace()                   |
+| `metrent`     | me:GetEyeTrace().Entity            |
+| `wep`         | me:GetActiveWeapon                 |
+| `veh`         | me:GetVehicle()                    |
+| `plys`        | player.GetAll()                    |
+| `dir(x)`      | prints f.keys or metatable methods |
 
 ### gmod-sentry
 This library packages [gmod-sentry](https://github.com/Lexicality/gmod-sentry) with CREDENTIAL_STORE support for convenience.
