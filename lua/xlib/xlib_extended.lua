@@ -3,7 +3,7 @@ XLIB.Extended = true
 if SERVER then
 	if XLIB.Extended then
 		AddCSLuaFile()
-		SetGlobalBool("development_mode", CREDENTIALS.CHECK.development_mode == 1)
+		SetGlobalBool("development_mode", CREDENTIALS.environment == "development")
 	else
 		return
 	end
@@ -11,18 +11,13 @@ end
 
 xloader("xlib_extended", function(f) include(f) end)
 
-local devports = {
-	["13337"] = true,
-	["13338"] = true,
-}
-
 function IsTestServer()
-	return GetGlobalBool("development_mode") and devports[game.GetIPAddress():Split(":")[2]]
+	return GetGlobalBool("development_mode")
 end
 
 DevCommand("testserver.toggle", function(ply)
-	if not devports[game.GetIPAddress():Split(":")[2]] or CREDENTIALS.CHECK.production then
-		ply:ChatPrint("You cannot change the test server status on a production server! (Check hostport)")
+	if CREDENTIALS.environment == "production" then
+		ply:ChatPrint("You cannot change the test server status on a live production server! Edit CREDENTIAL_STORE.txt")
 		return
 	end
 
