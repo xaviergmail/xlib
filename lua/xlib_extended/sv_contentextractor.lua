@@ -51,7 +51,7 @@ function XLIB.DumpModel(mdl, outdir, decompile)
         saveFile(outdir, XLIB.Join(mdldir, fname))
     end
 
-    print("decompile", decompile)
+    print("decompiling?", decompile)
     if decompile then
         local d_data = XLIB.Join("data", outdir)
         local d_path = XLIB.Join(d_data, mdldir, mdlname)

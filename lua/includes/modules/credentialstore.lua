@@ -15,9 +15,10 @@ if not file.Exists(credential_store, "GAME") then
 end
 
 local defaults = {
-	production = false,
+	production = true,
 	development_mode = false,
 	extended = false,
+	environment = "production",
 }
 
 local mt = {
@@ -43,6 +44,16 @@ local function load()
 	creds.CHECK = setmetatable({}, {__index=creds})
 
 	_G.CREDENTIALS = setmetatable(creds, mt)
+	if CREDENTIALS.CHECK.environment then
+		CREDENTIALS.production = CREDENTIALS.environment == "production"
+		CREDENTIALS.development_mode = CREDENTIALS.environment == "development"
+	else
+		if CREDENTIALS.CHECK.production then
+			creds.environment = "production"
+		elseif CREDENTIALS.CHECK.development_mode then
+			creds.environment = "development"
+		end
+	end
 end
 
 load()

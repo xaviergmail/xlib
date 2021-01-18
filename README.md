@@ -1,9 +1,9 @@
 # XLIB
+
 A collection of snippets and tools for Garry's Mod development. (Short for Xavier's Library)
 
 > GLDoc documentation is currently underway. View [./docs/](./docs/index.html) It is currently not hosted anywhere but will be put on GH pages once more documentation is written.
 > Feel free to submit any pull requests to improve the documentation!
-
 
 - [XLIB](#xlib)
   - [Credential Store](#credential-store)
@@ -23,7 +23,8 @@ A collection of snippets and tools for Garry's Mod development. (Short for Xavie
 - [Contributing](#contributing)
 
 ## Credential Store
-***Preamble:** Most Garry's Mod scripts configurations hardcode credentials. This is less than ideal for source controlled projects.*
+
+**Preamble:** Most Garry's Mod scripts configurations hardcode credentials. This is less than ideal for source controlled projects.\*
 
 This aims to solve this issue by allowing you to store all of your credentials in a schemaless `GarrysMod/garrysmod/CREDENTIAL_STORE`
 [Valve VDF](https://developer.valvesoftware.com/wiki/KeyValues#File_Format) file
@@ -32,14 +33,21 @@ in the root of your Garry's Mod installation. In turn, this allows you to mainta
 The VDF file is exposed as the global `CREDENTIALS` table in Lua.
 
 ### Configuration
+
 `CREDENTIAL_STORE.txt`
+
 ```
 credentials
 {
     // Here are the fields XLib uses
-    development_mode "1" // Makes IsTestServer() return true
+    environment "production"  // Defaults to production. Setting to development makes IsTestServer() return true
     extended "1"  // Enables parts of XLib that are meant to be for "internal use" AKA not guaranteed to not cause any conflicts outside of our environments.
-    production "0" // No particular use, for now. Slightly redundant, but you can use `CREDENTIALS.production` as a predicate in your code.
+
+    // DEPRECATED - USING `environment` WILL SET THIS VALUE
+    // development_mode "1" // Makes IsTestServer() return true
+    // production "0" // No particular use, for now. Slightly redundant, but you can use `CREDENTIALS.production` as a predicate in your code.
+
+    // Example config for use with GDBC, optional
     mysql
     {
         sample
@@ -61,10 +69,11 @@ credentials
 ```
 
 ### Lua Usage
+
 ```lua
 require "credentialstore"
 
-if CREDENTIALS.development_mode then
+if CREDENTIALS.environment == "development" then  -- or simply IsTestServer() if using XLIB Extended
     print("Server is running in development mode!")
 end
 
@@ -76,18 +85,22 @@ end
 ```
 
 ## GDBC
+
 "Garry's Mod Database Connector" - Spawned by the disdain of hardcoding MySQL queries everywhere. Originally featured its own libmysql <-> Lua bindings but was
 retrofitted for use with [MysqlOO](https://github.com/FredyH/MySQLOO) for ease of maintainability.
 
 Some of the main features include:
-* Unique chaining control flow avoids callback hell
-* Prepared Statements (Actual prepared statements OR falls back to formatting the SQL query and sending it if `connect.usePreparedStatememts=false`)
-* MySQL Connection Pool (Set `connect.threads= >1`)
-* Database Versioning (Through a basic key-value `config` table added to each schema)
-* Schema Migrations (Players are not allowed to join until all migrations are complete!)
+
+- Unique chaining control flow avoids callback hell
+- Prepared Statements (Actual prepared statements OR falls back to formatting the SQL query and sending it if `connect.usePreparedStatememts=false`)
+- MySQL Connection Pool (Set `connect.threads= >1`)
+- Database Versioning (Through a basic key-value `config` table added to each schema)
+- Schema Migrations (Players are not allowed to join until all migrations are complete!)
 
 ### Declarative Syntax
+
 For connection info, queries and migrations
+
 ```lua
 schema "sample"
 {
@@ -98,10 +111,10 @@ schema "sample"
         pass = CREDENTIALS.mysql.sample.pass,
         database = CREDENTIALS.mysql.sample.db,
         port = CREDENTIALS.mysql.sample.port,
-        
+
         --[=====================================================================[
             Whether this database connection should use prepared statements.
-            
+
             Before you enable this, ensure that all of your queries are
             compatible for use within prepared statements.
 
@@ -124,7 +137,7 @@ schema "sample"
 
             In single-connection mode, initiating two query sequences one after
             the other will guarantee that the first sequence will finish before
-            the second 
+            the second
 
             IF YOU'RE UNSURE WHAT THIS MEANS, LEAVE THREADS=1 TO AVOID ISSUES.
             I'm serious! Blindly enabling this feature without having designed
@@ -140,7 +153,7 @@ schema "sample"
         ]=====================================================================]
 
         -- For the reasons listed above, I recommend leaving this parameter out
-        -- entirely if you plan on distributing your script to avoid other 
+        -- entirely if you plan on distributing your script to avoid other
         -- people from being tempted to blindly modify its value.
         -- threads = 1,  -- Set > 1 to enable connection pool. READ ABOVE!
     };
@@ -250,6 +263,7 @@ schema "sample"
 ```
 
 ### Control Flow
+
 ```lua
 require "gdbc"
 
@@ -401,18 +415,23 @@ end)
 ```
 
 ## XLoader
+
 "Xavier's Loader" - Predictable automatic recursive file includer
 
 Some of the main features include:
-* Automatically `include()` and `AddCSLuaFile()` files in the specified directory
-* Auto-refresh aware [Upstream bug](https://github.com/Facepunch/garrysmod-issues/issues/935)
-* Guaranteed predictable load order
+
+- Automatically `include()` and `AddCSLuaFile()` files in the specified directory
+- Auto-refresh aware [Upstream bug](https://github.com/Facepunch/garrysmod-issues/issues/935)
+- Guaranteed predictable load order
 
 The include order is as follows:
+
 1. All `sh_*.lua`<sup><u><a href="#conditional-networking">1</a></u></sup> files for the current directory, sorted alphanumerically
 2. All `sv_*.lua` or `cl_*.lua` files for the current directory, sorted alphanumerically
-3. Recurse steps 1, 2, 3 in subfolders. Subfolders of subfolders take priority. 
+3. Recurse steps 1, 2, 3 in subfolders. Subfolders of subfolders take priority.
+
 ### Conditional Networking
+
 Sometimes you might need to dynamically enable/disable shared (or purely clientside) scripts based on a specific condition on server startup.
 
 Introducing `BlockCSLuaFile()`!
@@ -430,23 +449,25 @@ if SERVER then
     end
 
     return
+
 end
 
 -- Run clientside-only code that needs to execute strictly immediately on script evaluation here
 </code>
+
 </pre>
 </details>
-
 
 **When should you use this?** The answer is: not very often.
 You should only resort to this when you need dynamic control over scripts that should run immediately on Lua state initialization.
 
 Example uses of conditional networking:
+
 - One-off diagnostic session: [xlib_extended/sh_delayhttp.lua](lua/xlib_extended/sh_delayhttp.lua)
 - xlib_extended itself could also be modified to benefit from this
 
-
 ### Usage
+
 ```lua
 require "xloader"
 xloader("sample_addon", function(f) include(f) end)
@@ -456,7 +477,54 @@ xloader("sample_addon", function(f) include(f) end)
 -- Second argument is required boilerplate to make it autorefresh-aware. View linked bug report above.
 ```
 
+## XLIB.Test
+
+This is a basic testing suite including a few nifty tools including string comparison and diff output
+
+Assertions support diff output **string** and **nested table** comparisons!
+It uses `XLIB.Compare` and `XLIB.CompareString` under the hood.
+
+- String comparisons will output pretty diff info on mismatch
+- Table comparisons will print out the first key path to differ between the two tables
+
+A _test group_ is one call to XLIB.Test. Each test group can have multiple assertions.
+
+- Players will be prevented from joining the server by a CheckPassword hook until all test _groups_ succeed
+- Note that a test group is marked as "complete" upon the first assertion. If the first assertion is truthy and subsequent failures from a timer or callback are falsy, the group will be considered as passing until a falsy assertion is made. BE CAREFUL as poorly structuring your tests could allow players to join a broken server. e.g `assert(true) timer.simple(5, function() assert(false) end)` is very bad.
+- As a rule of thumb, you should separate your synchronous and asynchronous tests into different groups, and only have one asynchronous assertion per test group.
+
+Usage:
+
+````lua
+XLIB.Test("API is reachable", function(assert, LOG, ERR)
+    -- LOG(...) -> Pretty-prints a log message to the test data
+    -- ERR(...) -> Pretty-prints an error message to the test data (DOESN'T FAIL THE TEST!)
+
+    -- assert(reason, result, [wanted])
+    -- If `result` is a boolean and compareTo is nil, `wanted` becomes the predicate to the assertion
+    -- If `wanted` is provided, XLIB.Compare or XLIB.CompareString will be used.
+
+    LOG("Running HTTP fetch")
+    http.Fetch("http://ifconfig.co/", function(body)
+        -- If this is truthy, the test group is marked as successful
+        assert("Visible server external IP is correct", body, "123.123.123.123")
+
+        -- DON'T DESIGN LIKE THIS! But be aware that the functionality does work.
+        -- As a rule of thumb, use ONE test group per asynchronous test
+        timer.Simple(60, functin()
+            -- Subsequent assertions will also be logged and lock the server if it fails.
+            assert("I decided to break everything", false)
+        end)
+
+
+    end, function(err)
+        ERR("HTTP Failed with reason", err)
+        assert("HTTP Failed", false)
+    end)
+end)
+
 ## XLIB.Timer
+
 This is an easy-to-use timing tool for basic profiling purposes.
 `XLIB.Time(identifier)`
 The identifier does not need to be unique. It will be used as a prefix for printing results.
@@ -530,6 +598,7 @@ clock:Finish()
 ```
 
 Output
+
 ```
 
 [pairs vs ipairs vs for]  Testing with 4000000 iterations
@@ -542,43 +611,77 @@ Output
 ```
 
 ## NetWrapper
+
 This library packages my fork of [netwrapper](https://github.com/xaviergmail/netwrapper).
 
 NetWrapper is a lightweight, bandwidth-focused wrapper around the existing `net` library. You can view its documentation [here](./lua/xlib/netwrapper) as well as examples [here](./lua/xlib/netwrapper/example.lua)
 
-
-
 ## XLIB Extended
+
 This is a part of XLIB disabled by default for use in packaged applications.
 To enable, simply set `extended "1"` in your `CREDENTIAL_STORE`
 
 The current features include:
+
 ### DevCommand
+
 `DevCommand(cmdname, callback(ply, cmd, args, arg_str), realm=SERVER)`
 
 This requires a function `IsDeveloper` (not provided by XLIB at this time) to be present on the Player metatable.
 Functionally similar to concommand.Add, this takes care of the boilerplate of doing concommand authentication.
 
-XLIB Extended also ships with two DevCommands: **`lua`** and **`luacl`**
+XLIB Extended also ships with a few DevCommands:
+| Command | Realm |
+| ------------- | ------------------------------------------------------------------------------------------- |
+| `lua` | Runs on the server |
+| `luacl` | Runs on your client |
+| `luash` | Runs on both client and server |
+| `luapl <PID>` | Runs on specified player's client where PID is UserID from `status` command |
+| `luaplall` | Runs client-side for all connected players |
+| `luashpl` | Runs server-side and on specified player's client where PID is UserID from `status` command |
+| `luashall` | Runs server-side and client-side for all connected players |
+| `manybots` | Spawns 10 bots |
+| `nobots` | Kicks all bost from the server |
+| `reloadmap` | Runs changelevel to the current map |
+| `testserver.toggle` | Temporarily makes `IsTestServer()` return false in a development environment |
+| `xlib_teststatus` | Prints ran tests as well as their output |
+| `xlib_cleartests` | Clears failed test status and unlocks the server |
+| `mapmanager.reload` | Reloads mapmanager settings without reloading the map |
+| `credentialstore.reload` | Reloads CREDENTIAL*STORE.txt without reloading the map |
+| `gdbc_log` | Temporarily enables GDBC logging |
+| `gdbc_reload` | Reloads all schema files (InitSchemas hook) |
+| `unblock_cvars` | Remove all FCVAR* restrictions on all cvars (requires cvarsx module). Can be ran on client and server |
+| `xlib_startuperrors` | Prints lua errors that occured during server start up |
+| `xlib_clearstartuperrors` | Clears startup lua errors and unlocks server |
+| `xlib_testhttp` | DEPRECATED - Enables logging for functions making HTTP calls before initialization and reloads the map |
+| `rmpanel` | Removes the VGUI panel under the cursor (useful if a panel becomes stuck after failing initialization) |
+
 These evaluate the passed string on either the server or client without needing RCON access or sv_allowcslua=1 respectively.
 
 When executing the server-side `lua` command, any output from `print`, `Msg`, `MsgC`, `PrintTable` will be redirected to the client's console.
 This is also true for any syntax or runtime errors.
 
+When using any command that runs on a client other than yours, the output will be piped back to the console of the initial command's runner in pink labeled with the client's name and Steam ID.
+
 It also provides some useful shorthand globals to help you avoid the low character count restriction:
 
-| Name        | Object                     |
-|-------------|----------------------------|
-| me (SERVER) | Player running the command |
-| me (CLIENT) | LocalPlayer()              |
-| metr        | me:GetEyeTrace()           |
-| metrent     | me:GetEyeTrace().Entity    |
-
+| Name          | Object                             |
+| ------------- | ---------------------------------- |
+| `me` (SERVER) | Player running the command         |
+| `me` (CLIENT) | LocalPlayer()                      |
+| `metr`        | me:GetEyeTrace()                   |
+| `metrent`     | me:GetEyeTrace().Entity            |
+| `wep`         | me:GetActiveWeapon                 |
+| `veh`         | me:GetVehicle()                    |
+| `plys`        | player.GetAll()                    |
+| `dir(x)`      | prints f.keys or metatable methods |
 
 ### gmod-sentry
+
 This library packages [gmod-sentry](https://github.com/Lexicality/gmod-sentry) with CREDENTIAL_STORE support for convenience.
 
 To enable, simply add and customize the following to your `GarrysMod/garrysmod/CREDENTIAL_STORE` file
+
 ```
 sentry
 {
@@ -603,6 +706,7 @@ sentry
 View [gmod-sentry Setup Options](https://github.com/Lexicality/gmod-sentry/blob/36f8899963c4c55898a433662c0f71c28aeb0488/README.md#sentrysetup) for more documentation on the sentry options.
 
 Alternatively, if you want to have dynamic control over the `sentry.Setup` call, set `auto "false"` and use the following code:
+
 ```lua
 require "credentialstore"
 require "xlib_sentry"
@@ -615,8 +719,8 @@ if CREDENTIALS.sentry then
 end
 ```
 
-
 # Contributing
+
 If you would like to contribute, feel free to create a pull request. As this is a personal project, I can't guarantee that every request will be merged. However, if it benefits the project, I will gladly consider it.
 
 I'm not enforcing any strict code guidelines as this project is already all over the place but please try to match the project's dominant style.
