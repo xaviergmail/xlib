@@ -495,7 +495,7 @@ A _test group_ is one call to XLIB.Test. Each test group can have multiple asser
 
 Usage:
 
-````lua
+```lua
 XLIB.Test("API is reachable", function(assert, LOG, ERR)
     -- LOG(...) -> Pretty-prints a log message to the test data
     -- ERR(...) -> Pretty-prints an error message to the test data (DOESN'T FAIL THE TEST!)
@@ -522,6 +522,7 @@ XLIB.Test("API is reachable", function(assert, LOG, ERR)
         assert("HTTP Failed", false)
     end)
 end)
+```
 
 ## XLIB.Timer
 
