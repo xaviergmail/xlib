@@ -18,7 +18,7 @@ function XLIB.PreInitialize(fn)
 	end
 end
 
-XLIB.DidInitPostEntity = XLIB.DidInitPostEntity or false
+XLIB.DidInitPostEntity = GAMEMODE or XLIB.DidInitPostEntity or false
 function XLIB.PostInitEntity(fn)
 	if XLIB.DidInitPostEntity then
 		fn()
